@@ -1,0 +1,11 @@
+.nuxt
+.output
+node_modules
+.pnpm-store
+.convex
+.dataset-work
+.env
+.env.*
+!.env.example
+dist
+*.log

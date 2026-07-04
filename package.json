@@ -1,0 +1,38 @@
+{
+  "name": "isitai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "typecheck": "nuxt typecheck",
+    "convex:dev": "convex dev",
+    "convex:codegen": "convex codegen",
+    "dataset:validate": "node --experimental-strip-types scripts/dataset/validate.ts",
+    "dataset:import": "node --experimental-strip-types scripts/dataset/import.ts",
+    "dataset:convex-table": "node --experimental-strip-types scripts/dataset/convex-table.ts",
+    "dataset:collect": "node --experimental-strip-types scripts/dataset/collect.ts",
+    "dataset:filter": "node --experimental-strip-types scripts/dataset/filter.ts",
+    "dataset:spec": "node --experimental-strip-types scripts/dataset/spec.ts",
+    "dataset:spec:codex": "node --experimental-strip-types scripts/dataset/spec-codex.ts",
+    "dataset:generate": "node --experimental-strip-types scripts/dataset/generate.ts",
+    "dataset:generate:codex": "node --experimental-strip-types scripts/dataset/generate-codex.ts",
+    "dataset:normalize": "node --experimental-strip-types scripts/dataset/normalize.ts",
+    "dataset:review": "node --experimental-strip-types scripts/dataset/review.ts",
+    "dataset:export": "node --experimental-strip-types scripts/dataset/export.ts"
+  },
+  "dependencies": {
+    "convex": "latest",
+    "nuxt": "latest",
+    "shiki": "latest",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@nuxt/typescript-build": "latest",
+    "@types/node": "^26.1.0",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vue-tsc": "latest"
+  },
+  "packageManager": "pnpm@11.5.2"
+}
