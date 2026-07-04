@@ -1,0 +1,1 @@
+{"display_code":"function candidate(sourceMapData, sourceMapUrl) {\n  const parsedMap = typeof sourceMapData === \"string\" ? JSON.parse(sourceMapData) : sourceMapData;\n  const consumer = \"sections\" in parsedMap\n    ? new IndexedSourceMapConsumer(parsedMap, sourceMapUrl)\n    : new BasicSourceMapConsumer(parsedMap, sourceMapUrl);\n\n  return Promise.resolve(consumer);\n}"}

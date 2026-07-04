@@ -1,0 +1,54 @@
+# Attributions
+
+Human snippets are sourced from permissively licensed pre-2021 open-source references.
+
+- js_0001: [jshttp/content-disposition](https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L144-L155) · MIT · f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb
+- js_0002: [jshttp/content-disposition](https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L166-L215) · MIT · f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb
+- js_0003: [jshttp/content-disposition](https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L227-L255) · MIT · f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb
+- js_0004: [jshttp/content-disposition](https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L265-L291) · MIT · f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb
+- js_0006: [jshttp/cookie](https://github.com/jshttp/cookie/blob/aec1177c7da67e3b3273df96cf476824dbc9ae09/index.js#L49-L83) · MIT · aec1177c7da67e3b3273df96cf476824dbc9ae09
+- js_0007: [jshttp/cookie](https://github.com/jshttp/cookie/blob/aec1177c7da67e3b3273df96cf476824dbc9ae09/index.js#L101-L182) · MIT · aec1177c7da67e3b3273df96cf476824dbc9ae09
+- js_0010: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L49-L68) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0011: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L77-L98) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0012: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L107-L123) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0013: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L132-L147) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0014: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L154-L188) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0015: [jshttp/mime-types](https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L158-L187) · MIT · 47b62ac45e9b176a2af35532d0eea4968bb9eb6d
+- js_0016: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L34-L97) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0017: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L99-L109) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0018: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L113-L155) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0019: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L157-L173) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0020: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L180-L197) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0021: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L199-L287) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0022: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L293-L316) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0023: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L318-L387) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0024: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L389-L436) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0025: [browserify/path-browserify](https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L445-L519) · MIT · 872fec31a8bac7b9b43be0e54ef3037e0202c5fb
+- js_0026: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L50-L112) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0027: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L149-L201) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0028: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L203-L235) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0030: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/stringify.js#L148-L192) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0031: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L15-L32) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0032: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L45-L100) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0033: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L123-L184) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0034: [ljharb/qs](https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L186-L208) · BSD-3-Clause · 8e014a7b1749ccec52104121950e7b0d251caa78
+- js_0035: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/bench/bench-dom-bindings.js#L5-L15) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0036: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/bench/bench-dom-bindings.js#L74-L114) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0037: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/base64-vlq.js#L93-L111) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0038: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/binary-search.js#L24-L65) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0039: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/binary-search.js#L85-L107) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0040: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/mapping-list.js#L14-L22) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0041: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/read-wasm.js#L23-L35) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0043: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/source-node.js#L151-L164) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0044: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L32-L44) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0045: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L47-L66) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0046: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L78-L104) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0047: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L117-L178) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0048: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L197-L237) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0049: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L250-L281) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0050: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L320-L352) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0051: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L362-L389) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0052: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L401-L428) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0054: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L455-L482) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0055: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L499-L545) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d
+- js_0056: [mozilla/source-map](https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/wasm.js#L6-L14) · BSD-3-Clause · b2171d58e90e64472b0e858013c0cc5f6772a83d

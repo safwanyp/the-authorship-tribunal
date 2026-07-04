@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "signature_intent": {
+      "type": "string"
+    },
+    "behavior": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "edge_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_details": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "summary",
+    "signature_intent",
+    "behavior",
+    "edge_cases",
+    "forbidden_details"
+  ],
+  "additionalProperties": false
+}

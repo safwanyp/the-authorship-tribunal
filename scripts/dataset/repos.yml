@@ -1,0 +1,152 @@
+[
+  {
+    "slug": "jshttp/content-disposition",
+    "url": "https://github.com/jshttp/content-disposition.git",
+    "source_url_base": "https://github.com/jshttp/content-disposition",
+    "ref": "f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "jshttp/cookie",
+    "url": "https://github.com/jshttp/cookie.git",
+    "source_url_base": "https://github.com/jshttp/cookie",
+    "ref": "2302b6e7c44f582e5615656586c962fdb2f1c711",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "jshttp/fresh",
+    "url": "https://github.com/jshttp/fresh.git",
+    "source_url_base": "https://github.com/jshttp/fresh",
+    "ref": "02df6303ff260b6b7da0b479f3e42222e8157b47",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "jshttp/mime-types",
+    "url": "https://github.com/jshttp/mime-types.git",
+    "source_url_base": "https://github.com/jshttp/mime-types",
+    "ref": "47b62ac45e9b176a2af35532d0eea4968bb9eb6d",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "pillarjs/path-to-regexp",
+    "url": "https://github.com/pillarjs/path-to-regexp.git",
+    "source_url_base": "https://github.com/pillarjs/path-to-regexp",
+    "ref": "1d8dd906e8bb92e2c118616256ef0a7b876cbcd6",
+    "license": "MIT",
+    "language": "ts",
+    "include_extensions": [".ts"],
+    "exclude_path_fragments": [".d.ts", "/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "browserify/path-browserify",
+    "url": "https://github.com/browserify/path-browserify.git",
+    "source_url_base": "https://github.com/browserify/path-browserify",
+    "ref": "872fec31a8bac7b9b43be0e54ef3037e0202c5fb",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "ljharb/qs",
+    "url": "https://github.com/ljharb/qs.git",
+    "source_url_base": "https://github.com/ljharb/qs",
+    "ref": "8e014a7b1749ccec52104121950e7b0d251caa78",
+    "license": "BSD-3-Clause",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "mathiasbynens/he",
+    "url": "https://github.com/mathiasbynens/he.git",
+    "source_url_base": "https://github.com/mathiasbynens/he",
+    "ref": "36afe179392226cf1b6ccdb16ebbb7a5a844d93a",
+    "license": "MIT",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "mozilla/source-map",
+    "url": "https://github.com/mozilla/source-map.git",
+    "source_url_base": "https://github.com/mozilla/source-map",
+    "ref": "b2171d58e90e64472b0e858013c0cc5f6772a83d",
+    "license": "BSD-3-Clause",
+    "language": "js",
+    "include_extensions": [".js"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "TypeStrong/ts-node",
+    "url": "https://github.com/TypeStrong/ts-node.git",
+    "source_url_base": "https://github.com/TypeStrong/ts-node",
+    "ref": "d2ccc5cd20c77828817cd3acb639430eac4a884d",
+    "license": "MIT",
+    "language": "ts",
+    "include_extensions": [".ts"],
+    "exclude_path_fragments": [".d.ts", "/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "palantir/tslint",
+    "url": "https://github.com/palantir/tslint.git",
+    "source_url_base": "https://github.com/palantir/tslint",
+    "ref": "10fc233b2555044b145c9bbd9f602d43e8df2216",
+    "license": "Apache-2.0",
+    "language": "ts",
+    "include_extensions": [".ts"],
+    "exclude_path_fragments": [".d.ts", "/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/node_modules/", "/coverage/"]
+  },
+  {
+    "slug": "pallets/click",
+    "url": "https://github.com/pallets/click.git",
+    "source_url_base": "https://github.com/pallets/click",
+    "ref": "1784558ed7c75c65764d2a434bd9cbb206ca939d",
+    "license": "BSD-3-Clause",
+    "language": "python",
+    "include_extensions": [".py"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/testing/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/docs/", "/site-packages/", "/__pycache__/"]
+  },
+  {
+    "slug": "serde-rs/json",
+    "url": "https://github.com/serde-rs/json.git",
+    "source_url_base": "https://github.com/serde-rs/json",
+    "ref": "64bb3962bd70ae74d6e8a9daa496504c64033760",
+    "license": "MIT OR Apache-2.0",
+    "language": "rust",
+    "include_extensions": [".rs"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/benches/", "/benchmarks/", "/examples/", "/target/", "/vendor/"]
+  },
+  {
+    "slug": "fmtlib/fmt",
+    "url": "https://github.com/fmtlib/fmt.git",
+    "source_url_base": "https://github.com/fmtlib/fmt",
+    "ref": "7bdf0628b1276379886c7f6dda2cef2b3b374f0b",
+    "license": "MIT",
+    "language": "cpp",
+    "include_extensions": [".cc", ".cpp", ".h", ".hpp"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/build/"]
+  },
+  {
+    "slug": "gabime/spdlog",
+    "url": "https://github.com/gabime/spdlog.git",
+    "source_url_base": "https://github.com/gabime/spdlog",
+    "ref": "de0dbfa3596a18cd70a4619b6a9766847a941276",
+    "license": "MIT",
+    "language": "cpp",
+    "include_extensions": [".cc", ".cpp", ".h", ".hpp"],
+    "exclude_path_fragments": ["/test/", "/tests/", "/fixtures/", "/dist/", "/vendor/", "/examples/", "/benchmark/", "/benchmarks/", "/docs/", "/build/"]
+  }
+]

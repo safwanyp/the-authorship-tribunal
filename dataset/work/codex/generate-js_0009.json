@@ -1,0 +1,1 @@
+{"display_code":"function candidate(input) {\n  return input.split(',').map((field) => field.replace(/^ +| +$/g, ''));\n}"}

@@ -1,0 +1,5153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>JavaScript Pair Review</title>
+  <style>
+    body { margin: 24px; background: #07090d; color: #f5f7fb; font-family: system-ui, sans-serif; }
+    article { border: 1px solid #293241; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    pre { overflow: auto; background: #06080c; padding: 12px; border-radius: 8px; }
+    code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    a { color: #7cf7c7; }
+  </style>
+</head>
+<body>
+  <h1>JavaScript Pair Review</h1>
+  <p>Accept/reject only. Put decisions in <code>dataset/work/review/decisions.json</code> as {"js_0001":"approved"}.</p>
+  <article>
+        <h2>js_0001</h2>
+        <p>Builds and returns a formatted Content-Disposition header value for a supplied resource name and optional disposition settings.</p>
+        <p><a href="https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L144-L155">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (filename, options) {
+  var opts = options || {}
+
+  
+  var type = opts.type || 'attachment'
+
+  
+  var params = createparams(filename, opts.fallback)
+
+  
+  return format(new ContentDisposition(type, params))
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(resourceName, settings) {
+  const opts = settings || {};
+  const kind = opts.type || opts.disposition || opts.dispositionType || 'attachment';
+  const params = {};
+
+  if (resourceName !== undefined) {
+    if (typeof resourceName !== 'string') {
+      throw new TypeError('resource name must be a string');
+    }
+
+    const baseName = resourceName.split(/[\\/]/).pop();
+    const alternate = opts.fallback !== undefined ? opts.fallback : opts.alternate;
+    const asciiOnly = /^[\x20-\x7e]*$/.test(baseName);
+
+    if (typeof alternate === 'string') {
+      params.filename = alternate;
+      if (alternate !== baseName) {
+        params['filename*'] = "UTF-8''" + encodeURIComponent(baseName).replace(/[!'()]/g, c =&gt; '%' + c.charCodeAt(0).toString(16).toUpperCase());
+      }
+    } else if (alternate === false || asciiOnly) {
+      params.filename = baseName;
+    } else {
+      params.filename = baseName.replace(/[^\x20-\x7e]/g, '?');
+      params['filename*'] = "UTF-8''" + encodeURIComponent(baseName).replace(/[!'()]/g, c =&gt; '%' + c.charCodeAt(0).toString(16).toUpperCase());
+    }
+  }
+
+  const header = [String(kind).toLowerCase()];
+  for (const key of Object.keys(params).sort()) {
+    const value = params[key];
+    if (key.endsWith('*')) {
+      header.push(key + '=' + value);
+    } else {
+      header.push(key + '="' + String(value).replace(/[\\"]/g, '\\$&amp;') + '"');
+    }
+  }
+
+  return header.join('; ');
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0002</h2>
+        <p>Builds a small attachment-name parameter object from a supplied path-like string and an optional plain-text fallback policy.</p>
+        <p><a href="https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L166-L215">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (filename, fallback) {
+  if (filename === undefined) {
+    return
+  }
+
+  var params = {}
+
+  if (typeof filename !== 'string') {
+    throw new TypeError('filename must be a string')
+  }
+
+  
+  if (fallback === undefined) {
+    fallback = true
+  }
+
+  if (typeof fallback !== 'string' &amp;&amp; typeof fallback !== 'boolean') {
+    throw new TypeError('fallback must be a string or boolean')
+  }
+
+  if (typeof fallback === 'string' &amp;&amp; NON_LATIN1_REGEXP.test(fallback)) {
+    throw new TypeError('fallback must be ISO-8859-1 string')
+  }
+
+  
+  var name = basename(filename)
+
+  
+  var isQuotedString = TEXT_REGEXP.test(name)
+
+  
+  var fallbackName = typeof fallback !== 'string'
+    ? fallback &amp;&amp; getlatin1(name)
+    : basename(fallback)
+  var hasFallback = typeof fallbackName === 'string' &amp;&amp; fallbackName !== name
+
+  
+  if (hasFallback || !isQuotedString || HEX_ESCAPE_REGEXP.test(name)) {
+    params['filename*'] = name
+  }
+
+  
+  if (isQuotedString || hasFallback) {
+    params.filename = hasFallback
+      ? fallbackName
+      : name
+  }
+
+  return params
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(inputName, fallback) {
+  if (inputName === undefined) return undefined;
+  if (typeof inputName !== 'string') throw new TypeError('name must be a string');
+
+  const fallbackSetting = fallback === undefined ? true : fallback;
+  if (typeof fallbackSetting !== 'boolean' &amp;&amp; typeof fallbackSetting !== 'string') {
+    throw new TypeError('fallback must be a boolean or string');
+  }
+
+  const splitLast = value =&gt; String(value).split(/[\\/]/).pop();
+  const hasNonLatin1 = value =&gt; /[^\x00-\xff]/.test(value);
+  const canBeQuoted = value =&gt; /^[\x20-\x7e\x80-\xff]*$/.test(value);
+  const needsPercentForm = value =&gt; /%[0-9a-fA-F]{2}/.test(value);
+
+  if (typeof fallbackSetting === 'string' &amp;&amp; hasNonLatin1(fallbackSetting)) {
+    throw new TypeError('fallback must be ISO-8859-1 compatible');
+  }
+
+  const finalName = splitLast(inputName);
+  let plainAlternative;
+
+  if (typeof fallbackSetting === 'string') {
+    plainAlternative = splitLast(fallbackSetting);
+  } else if (fallbackSetting) {
+    plainAlternative = finalName.replace(/[^\x00-\xff]/g, '?');
+  }
+
+  const hasDistinctFallback = typeof plainAlternative === 'string' &amp;&amp; plainAlternative !== finalName;
+  const safePlain = canBeQuoted(finalName);
+  const result = {};
+
+  if (hasDistinctFallback || !safePlain || needsPercentForm(finalName)) {
+    result['filename*'] = finalName;
+  }
+
+  if (safePlain || hasDistinctFallback) {
+    result.filename = hasDistinctFallback ? plainAlternative : finalName;
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0003</h2>
+        <p>Serializes a structured token descriptor into a normalized semicolon-delimited string after validating the primary token.</p>
+        <p><a href="https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L227-L255">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (obj) {
+  var parameters = obj.parameters
+  var type = obj.type
+
+  if (!type || typeof type !== 'string' || !TOKEN_REGEXP.test(type)) {
+    throw new TypeError('invalid type')
+  }
+
+  
+  var string = String(type).toLowerCase()
+
+  
+  if (parameters &amp;&amp; typeof parameters === 'object') {
+    var param
+    var params = Object.keys(parameters).sort()
+
+    for (var i = 0; i &lt; params.length; i++) {
+      param = params[i]
+
+      var val = param.substr(-1) === '*'
+        ? ustring(parameters[param])
+        : qstring(parameters[param])
+
+      string += '; ' + param + '=' + val
+    }
+  }
+
+  return string
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  if (!input || typeof input.token !== "string" || !/^[!#$%&amp;'*+.^_`|~0-9A-Za-z-]+(?:\/[!#$%&amp;'*+.^_`|~0-9A-Za-z-]+)?$/.test(input.token)) {
+    throw new TypeError("invalid token");
+  }
+
+  var output = input.token.toLowerCase();
+  var extras = input.attributes;
+
+  if (extras &amp;&amp; typeof extras === "object" &amp;&amp; !Array.isArray(extras)) {
+    Object.keys(extras).sort().forEach(function (key) {
+      var value = String(extras[key]);
+      if (key.charAt(key.length - 1) === "*") {
+        output += "; " + key + "=" + value;
+      } else {
+        output += "; " + key + "=\"" + value.replace(/[\\"]/g, "\\$&amp;") + "\"";
+      }
+    });
+  }
+
+  return output;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0004</h2>
+        <p>Parses an extended field value string and returns the decoded text when the declared character encoding is supported.</p>
+        <p><a href="https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L265-L291">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (str) {
+  var match = EXT_VALUE_REGEXP.exec(str)
+
+  if (!match) {
+    throw new TypeError('invalid extended field value')
+  }
+
+  var charset = match[1].toLowerCase()
+  var encoded = match[2]
+  var value
+
+  
+  var binary = encoded.replace(HEX_ESCAPE_REPLACE_REGEXP, pdecode)
+
+  switch (charset) {
+    case 'iso-8859-1':
+      value = getlatin1(binary)
+      break
+    case 'utf-8':
+      value = Buffer.from(binary, 'binary').toString('utf8')
+      break
+    default:
+      throw new TypeError('unsupported charset in extended field')
+  }
+
+  return value
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  if (typeof input !== "string") {
+    throw new TypeError("invalid-value");
+  }
+
+  const first = input.indexOf("'");
+  const second = first === -1 ? -1 : input.indexOf("'", first + 1);
+
+  if (first &lt;= 0 || second === -1) {
+    throw new TypeError("invalid-value");
+  }
+
+  const encoding = input.slice(0, first).toLowerCase();
+  const payload = input.slice(second + 1);
+
+  if (encoding !== "utf-8" &amp;&amp; encoding !== "iso-8859-1") {
+    throw new TypeError("unsupported-encoding");
+  }
+
+  const bytes = [];
+
+  for (let i = 0; i &lt; payload.length; i += 1) {
+    const ch = payload.charCodeAt(i);
+
+    if (payload[i] === "%") {
+      const hex = payload.slice(i + 1, i + 3);
+      if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
+        throw new TypeError("invalid-value");
+      }
+      bytes.push(parseInt(hex, 16));
+      i += 2;
+    } else {
+      if (ch &gt; 0x7f) {
+        throw new TypeError("invalid-value");
+      }
+      bytes.push(ch);
+    }
+  }
+
+  if (encoding === "iso-8859-1") {
+    return String.fromCharCode.apply(null, bytes);
+  }
+
+  if (typeof TextDecoder === "function") {
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+    } catch (error) {
+      throw new TypeError("invalid-value");
+    }
+  }
+
+  try {
+    return decodeURIComponent(bytes.map(function (byte) {
+      return "%" + byte.toString(16).padStart(2, "0");
+    }).join(""));
+  } catch (error) {
+    throw new TypeError("invalid-value");
+  }
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0005</h2>
+        <p>Parses a content disposition header value into a normalized object or throws when the value is missing, malformed, or contains duplicate parameters.</p>
+        <p><a href="https://github.com/jshttp/content-disposition/blob/f6d7cba7ea09dfea1492d5ffe438fe2f2e3cc3bb/index.js#L314-L384">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (string) {
+  if (!string || typeof string !== 'string') {
+    throw new TypeError('argument string is required')
+  }
+
+  var match = DISPOSITION_TYPE_REGEXP.exec(string)
+
+  if (!match) {
+    throw new TypeError('invalid type format')
+  }
+
+  
+  var index = match[0].length
+  var type = match[1].toLowerCase()
+
+  var key
+  var names = []
+  var params = {}
+  var value
+
+  
+  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+    ? index - 1
+    : index
+
+  
+  while ((match = PARAM_REGEXP.exec(string))) {
+    if (match.index !== index) {
+      throw new TypeError('invalid parameter format')
+    }
+
+    index += match[0].length
+    key = match[1].toLowerCase()
+    value = match[2]
+
+    if (names.indexOf(key) !== -1) {
+      throw new TypeError('invalid duplicate parameter')
+    }
+
+    names.push(key)
+
+    if (key.indexOf('*') + 1 === key.length) {
+      
+      key = key.slice(0, -1)
+      value = decodefield(value)
+
+      
+      params[key] = value
+      continue
+    }
+
+    if (typeof params[key] === 'string') {
+      continue
+    }
+
+    if (value[0] === '"') {
+      
+      value = value
+        .substr(1, value.length - 2)
+        .replace(QESC_REGEXP, '$1')
+    }
+
+    params[key] = value
+  }
+
+  if (index !== -1 &amp;&amp; index !== string.length) {
+    throw new TypeError('invalid parameter format')
+  }
+
+  return new ContentDisposition(type, params)
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  if (typeof input !== "string" || input.length === 0) {
+    throw new TypeError("invalid content disposition");
+  }
+
+  var token = /^[!#$%&amp;'*+.^_`|~0-9A-Za-z-]+/;
+  var first = token.exec(input);
+  if (!first || first.index !== 0) {
+    throw new TypeError("invalid content disposition");
+  }
+
+  var type = first[0].toLowerCase();
+  var pos = first[0].length;
+  var params = {};
+  var seen = Object.create(null);
+  var extended = Object.create(null);
+
+  function skipSpace(i) {
+    while (i &lt; input.length) {
+      var c = input.charCodeAt(i);
+      if (c !== 32 &amp;&amp; c !== 9) break;
+      i++;
+    }
+    return i;
+  }
+
+  function bad() {
+    throw new TypeError("invalid content disposition");
+  }
+
+  function readToken(i) {
+    var m = token.exec(input.slice(i));
+    return m ? m[0] : "";
+  }
+
+  function decodeExtended(text) {
+    var pieces = /^([^']*)'[^']*'(.*)$/.exec(text);
+    if (!pieces) bad();
+
+    var charset = pieces[1].toLowerCase();
+    var body = pieces[2];
+    var bytes = [];
+
+    for (var i = 0; i &lt; body.length; i++) {
+      var ch = body.charCodeAt(i);
+      if (body[i] === "%") {
+        var hex = body.slice(i + 1, i + 3);
+        if (!/^[0-9A-Fa-f]{2}$/.test(hex)) bad();
+        bytes.push(parseInt(hex, 16));
+        i += 2;
+      } else {
+        bytes.push(ch);
+      }
+    }
+
+    if (charset === "utf-8" || charset === "utf8") {
+      if (typeof TextDecoder !== "undefined") {
+        return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+      }
+      return decodeURIComponent(body.replace(/%(?![0-9A-Fa-f]{2})/g, "%25"));
+    }
+
+    if (charset === "iso-8859-1" || charset === "latin1") {
+      var out = "";
+      for (var j = 0; j &lt; bytes.length; j++) out += String.fromCharCode(bytes[j]);
+      return out;
+    }
+
+    bad();
+  }
+
+  pos = skipSpace(pos);
+  if (pos === input.length) return { type: type, parameters: params };
+  if (input[pos] !== ";") bad();
+
+  while (pos &lt; input.length) {
+    if (input[pos] !== ";") bad();
+    pos++;
+    pos = skipSpace(pos);
+    if (pos === input.length) break;
+
+    var rawName = readToken(pos);
+    if (!rawName) bad();
+    pos += rawName.length;
+    pos = skipSpace(pos);
+    if (input[pos] !== "=") bad();
+    pos++;
+    pos = skipSpace(pos);
+
+    var rawValue;
+    if (input[pos] === '"') {
+      pos++;
+      rawValue = "";
+      while (pos &lt; input.length) {
+        var chr = input[pos++];
+        if (chr === '"') break;
+        if (chr === "\\") {
+          if (pos &gt;= input.length) bad();
+          rawValue += input[pos++];
+        } else {
+          rawValue += chr;
+        }
+      }
+      if (input[pos - 1] !== '"') bad();
+    } else {
+      rawValue = readToken(pos);
+      if (!rawValue) bad();
+      pos += rawValue.length;
+    }
+
+    pos = skipSpace(pos);
+    if (pos &lt; input.length &amp;&amp; input[pos] !== ";") bad();
+
+    var lowered = rawName.toLowerCase();
+    if (seen[lowered]) {
+      throw new TypeError("duplicate parameter");
+    }
+    seen[lowered] = true;
+
+    var isExtended = lowered.endsWith("*");
+    var name = isExtended ? lowered.slice(0, -1) : lowered;
+    if (!name) bad();
+
+    if (isExtended) {
+      params[name] = decodeExtended(rawValue);
+      extended[name] = true;
+    } else if (!extended[name]) {
+      params[name] = rawValue;
+    }
+  }
+
+  return { type: type, parameters: params };
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0006</h2>
+        <p>Parses a delimited assignment string into an object of decoded key-value entries.</p>
+        <p><a href="https://github.com/jshttp/cookie/blob/aec1177c7da67e3b3273df96cf476824dbc9ae09/index.js#L49-L83">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(str, options) {
+  if (typeof str !== 'string') {
+    throw new TypeError('argument str must be a string');
+  }
+
+  var obj = {}
+  var opt = options || {};
+  var pairs = str.split(pairSplitRegExp);
+  var dec = opt.decode || decode;
+
+  for (var i = 0; i &lt; pairs.length; i++) {
+    var pair = pairs[i];
+    var eq_idx = pair.indexOf('=');
+
+    
+    if (eq_idx &lt; 0) {
+      continue;
+    }
+
+    var key = pair.substr(0, eq_idx).trim()
+    var val = pair.substr(++eq_idx, pair.length).trim();
+
+    
+    if ('"' == val[0]) {
+      val = val.slice(1, -1);
+    }
+
+    
+    if (undefined == obj[key]) {
+      obj[key] = tryDecode(val, dec);
+    }
+  }
+
+  return obj;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input, settings) {
+  if (typeof input !== "string") {
+    throw new TypeError("argument must be a string");
+  }
+
+  var result = {};
+  var options = settings || {};
+  var decodeValue = typeof options.decode === "function" ? options.decode : decodeURIComponent;
+  var pieces = input.split(/; */);
+
+  for (var index = 0; index &lt; pieces.length; index += 1) {
+    var part = pieces[index];
+    var equalsAt = part.indexOf("=");
+
+    if (equalsAt === -1) {
+      continue;
+    }
+
+    var name = part.slice(0, equalsAt).trim();
+
+    if (Object.prototype.hasOwnProperty.call(result, name)) {
+      continue;
+    }
+
+    var encoded = part.slice(equalsAt + 1).trim();
+
+    if (encoded.length &gt;= 2 &amp;&amp; encoded[0] === '"' &amp;&amp; encoded[encoded.length - 1] === '"') {
+      encoded = encoded.slice(1, -1);
+    }
+
+    try {
+      result[name] = decodeValue(encoded);
+    } catch (error) {
+      result[name] = encoded;
+    }
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0007</h2>
+        <p>Serializes a cookie-style key/value pair with optional attributes into a single header-compatible string after validating inputs.</p>
+        <p><a href="https://github.com/jshttp/cookie/blob/aec1177c7da67e3b3273df96cf476824dbc9ae09/index.js#L101-L182">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(name, val, options) {
+  var opt = options || {};
+  var enc = opt.encode || encode;
+
+  if (typeof enc !== 'function') {
+    throw new TypeError('option encode is invalid');
+  }
+
+  if (!fieldContentRegExp.test(name)) {
+    throw new TypeError('argument name is invalid');
+  }
+
+  var value = enc(val);
+
+  if (value &amp;&amp; !fieldContentRegExp.test(value)) {
+    throw new TypeError('argument val is invalid');
+  }
+
+  var str = name + '=' + value;
+
+  if (null != opt.maxAge) {
+    var maxAge = opt.maxAge - 0;
+    if (isNaN(maxAge)) throw new Error('maxAge should be a Number');
+    str += '; Max-Age=' + Math.floor(maxAge);
+  }
+
+  if (opt.domain) {
+    if (!fieldContentRegExp.test(opt.domain)) {
+      throw new TypeError('option domain is invalid');
+    }
+
+    str += '; Domain=' + opt.domain;
+  }
+
+  if (opt.path) {
+    if (!fieldContentRegExp.test(opt.path)) {
+      throw new TypeError('option path is invalid');
+    }
+
+    str += '; Path=' + opt.path;
+  }
+
+  if (opt.expires) {
+    if (typeof opt.expires.toUTCString !== 'function') {
+      throw new TypeError('option expires is invalid');
+    }
+
+    str += '; Expires=' + opt.expires.toUTCString();
+  }
+
+  if (opt.httpOnly) {
+    str += '; HttpOnly';
+  }
+
+  if (opt.secure) {
+    str += '; Secure';
+  }
+
+  if (opt.sameSite) {
+    var sameSite = typeof opt.sameSite === 'string'
+      ? opt.sameSite.toLowerCase() : opt.sameSite;
+
+    switch (sameSite) {
+      case true:
+        str += '; SameSite=Strict';
+        break;
+      case 'lax':
+        str += '; SameSite=Lax';
+        break;
+      case 'strict':
+        str += '; SameSite=Strict';
+        break;
+      case 'none':
+        str += '; SameSite=None';
+        break;
+      default:
+        throw new TypeError('option sameSite is invalid');
+    }
+  }
+
+  return str;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(name, value, settings) {
+  const options = settings == null ? {} : settings;
+  const encoder = options.encode == null ? encodeURIComponent : options.encode;
+
+  if (typeof encoder !== "function") {
+    throw new TypeError("option encode is invalid");
+  }
+
+  const tokenPattern = /^[!#$%&amp;'*+\-.^_`|~0-9A-Za-z]+$/;
+  if (typeof name !== "string" || !tokenPattern.test(name)) {
+    throw new TypeError("cookie name is invalid");
+  }
+
+  const encoded = encoder(value);
+  const text = String(encoded);
+  const valuePattern = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+  if (text !== "" &amp;&amp; !valuePattern.test(text)) {
+    throw new TypeError("cookie value is invalid");
+  }
+
+  let output = name + "=" + text;
+
+  if (options.maxAge) {
+    const seconds = Math.floor(Number(options.maxAge));
+    if (!Number.isFinite(seconds)) {
+      throw new TypeError("maxAge is invalid");
+    }
+    output += "; Max-Age=" + seconds;
+  }
+
+  if (options.domain) {
+    const domain = String(options.domain);
+    const domainPattern = /^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
+    if (!domainPattern.test(domain)) {
+      throw new TypeError("domain is invalid");
+    }
+    output += "; Domain=" + domain;
+  }
+
+  if (options.path) {
+    const path = String(options.path);
+    if (!/^[\x20-\x3A\x3D-\x7E]*$/.test(path)) {
+      throw new TypeError("path is invalid");
+    }
+    output += "; Path=" + path;
+  }
+
+  if (options.expires) {
+    if (typeof options.expires.toUTCString !== "function") {
+      throw new TypeError("expires is invalid");
+    }
+    output += "; Expires=" + options.expires.toUTCString();
+  }
+
+  if (options.httpOnly) {
+    output += "; HttpOnly";
+  }
+
+  if (options.secure) {
+    output += "; Secure";
+  }
+
+  if (options.sameSite) {
+    const sameSite = options.sameSite === true ? "strict" : String(options.sameSite).toLowerCase();
+    if (sameSite === "strict") {
+      output += "; SameSite=Strict";
+    } else if (sameSite === "lax") {
+      output += "; SameSite=Lax";
+    } else if (sameSite === "none") {
+      output += "; SameSite=None";
+    } else {
+      throw new TypeError("sameSite is invalid");
+    }
+  }
+
+  return output;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0008</h2>
+        <p>Determines whether an HTTP conditional request can be treated as fresh based on cache directives and response validators.</p>
+        <p><a href="https://github.com/jshttp/fresh/blob/02df6303ff260b6b7da0b479f3e42222e8157b47/index.js#L33-L85">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (reqHeaders, resHeaders) {
+  
+  var modifiedSince = reqHeaders['if-modified-since']
+  var noneMatch = reqHeaders['if-none-match']
+
+  
+  if (!modifiedSince &amp;&amp; !noneMatch) {
+    return false
+  }
+
+  
+  
+  
+  var cacheControl = reqHeaders['cache-control']
+  if (cacheControl &amp;&amp; CACHE_CONTROL_NO_CACHE_REGEXP.test(cacheControl)) {
+    return false
+  }
+
+  
+  if (noneMatch &amp;&amp; noneMatch !== '*') {
+    var etag = resHeaders['etag']
+
+    if (!etag) {
+      return false
+    }
+
+    var etagStale = true
+    var matches = parseTokenList(noneMatch)
+    for (var i = 0; i &lt; matches.length; i++) {
+      var match = matches[i]
+      if (match === etag || match === 'W/' + etag || 'W/' + match === etag) {
+        etagStale = false
+        break
+      }
+    }
+
+    if (etagStale) {
+      return false
+    }
+  }
+
+  
+  if (modifiedSince) {
+    var lastModified = resHeaders['last-modified']
+    var modifiedStale = !lastModified || !(parseHttpDate(lastModified) &lt;= parseHttpDate(modifiedSince))
+
+    if (modifiedStale) {
+      return false
+    }
+  }
+
+  return true
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(requestHeaders, responseHeaders) {
+  function readHeader(headers, name) {
+    if (!headers) return undefined;
+    var target = String(name).toLowerCase();
+
+    if (typeof headers.get === "function") {
+      var got = headers.get(name);
+      return got == null ? undefined : String(got);
+    }
+
+    if (typeof headers.forEach === "function" &amp;&amp; !(Array.isArray(headers))) {
+      var found;
+      headers.forEach(function (value, key) {
+        if (String(key).toLowerCase() === target) found = value;
+      });
+      if (found != null) return Array.isArray(found) ? found.join(", ") : String(found);
+    }
+
+    if (Array.isArray(headers)) {
+      var parts = [];
+      for (var i = 0; i &lt; headers.length; i++) {
+        var pair = headers[i];
+        if (pair &amp;&amp; String(pair[0]).toLowerCase() === target &amp;&amp; pair[1] != null) {
+          parts.push(String(pair[1]));
+        }
+      }
+      return parts.length ? parts.join(", ") : undefined;
+    }
+
+    for (var key in headers) {
+      if (Object.prototype.hasOwnProperty.call(headers, key) &amp;&amp; String(key).toLowerCase() === target) {
+        var value = headers[key];
+        return value == null ? undefined : Array.isArray(value) ? value.join(", ") : String(value);
+      }
+    }
+
+    return undefined;
+  }
+
+  function hasNoCache(value) {
+    if (value == null) return false;
+    return String(value).split(",").some(function (part) {
+      return part.trim().toLowerCase().split("=", 1)[0] === "no-cache";
+    });
+  }
+
+  function splitEtags(value) {
+    var text = String(value);
+    var list = [];
+    var start = 0;
+    var quoted = false;
+    var escaped = false;
+
+    for (var i = 0; i &lt; text.length; i++) {
+      var ch = text.charAt(i);
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\" &amp;&amp; quoted) {
+        escaped = true;
+      } else if (ch === "\"") {
+        quoted = !quoted;
+      } else if (ch === "," &amp;&amp; !quoted) {
+        list.push(text.slice(start, i).trim());
+        start = i + 1;
+      }
+    }
+
+    list.push(text.slice(start).trim());
+    return list.filter(Boolean);
+  }
+
+  function normalizeEtag(value) {
+    var tag = String(value).trim();
+    if (/^W\s*\//i.test(tag)) tag = tag.replace(/^W\s*\/\s*/i, "");
+    return tag;
+  }
+
+  var conditionTags = readHeader(requestHeaders, "if-none-match");
+  var conditionDate = readHeader(requestHeaders, "if-modified-since");
+
+  if (conditionTags == null &amp;&amp; conditionDate == null) return false;
+  if (hasNoCache(readHeader(requestHeaders, "cache-control"))) return false;
+
+  if (conditionTags != null) {
+    var requestedTags = splitEtags(conditionTags);
+    var hasWildcard = requestedTags.some(function (tag) { return tag === "*"; });
+
+    if (!hasWildcard) {
+      var actualTag = readHeader(responseHeaders, "etag");
+      if (actualTag == null) return false;
+
+      var actual = normalizeEtag(actualTag);
+      var matched = requestedTags.some(function (tag) {
+        return normalizeEtag(tag) === actual;
+      });
+      if (!matched) return false;
+    }
+  }
+
+  if (conditionDate != null) {
+    var responseDate = readHeader(responseHeaders, "last-modified");
+    if (responseDate == null) return false;
+
+    var requestedTime = Date.parse(conditionDate);
+    var responseTime = Date.parse(responseDate);
+    if (!Number.isFinite(requestedTime) || !Number.isFinite(responseTime)) return false;
+    if (responseTime &gt; requestedTime) return false;
+  }
+
+  return true;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0009</h2>
+        <p>Parses a comma-separated string into an array of fields with ordinary space padding removed from each field.</p>
+        <p><a href="https://github.com/jshttp/fresh/blob/02df6303ff260b6b7da0b479f3e42222e8157b47/index.js#L110-L137">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (str) {
+  var end = 0
+  var list = []
+  var start = 0
+
+  
+  for (var i = 0, len = str.length; i &lt; len; i++) {
+    switch (str.charCodeAt(i)) {
+      case 0x20: 
+        if (start === end) {
+          start = end = i + 1
+        }
+        break
+      case 0x2c: 
+        list.push(str.substring(start, end))
+        start = end = i + 1
+        break
+      default:
+        end = i + 1
+        break
+    }
+  }
+
+  
+  list.push(str.substring(start, end))
+
+  return list
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  return input.split(',').map((field) =&gt; field.replace(/^ +| +$/g, ''));
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0010</h2>
+        <p>Determines the character encoding for a valid media type string, returning an explicit charset, a text default, or false.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L49-L68">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (type) {
+  if (!type || typeof type !== 'string') {
+    return false
+  }
+
+  
+  var match = EXTRACT_TYPE_REGEXP.exec(type)
+  var mime = match &amp;&amp; db[match[1].toLowerCase()]
+
+  if (mime &amp;&amp; mime.charset) {
+    return mime.charset
+  }
+
+  
+  if (match &amp;&amp; TEXT_TYPE_REGEXP.test(match[1])) {
+    return 'UTF-8'
+  }
+
+  return false
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (typeof value !== "string") return false;
+
+  const trimmed = value.trim();
+  if (trimmed === "") return false;
+
+  const typePart = trimmed.split(";", 1)[0].trim().toLowerCase();
+  if (!/^[!#$%&amp;'*+.^_`|~0-9a-z-]+\/[!#$%&amp;'*+.^_`|~0-9a-z-]+$/.test(typePart)) return false;
+
+  const charsets = {
+    "application/ecmascript": "UTF-8",
+    "application/javascript": "UTF-8",
+    "application/json": "UTF-8",
+    "application/ld+json": "UTF-8",
+    "application/manifest+json": "UTF-8",
+    "application/rss+xml": "UTF-8",
+    "application/atom+xml": "UTF-8",
+    "application/wasm": "UTF-8",
+    "application/x-javascript": "UTF-8",
+    "application/xhtml+xml": "UTF-8",
+    "application/xml": "UTF-8",
+    "image/svg+xml": "UTF-8"
+  };
+
+  if (Object.prototype.hasOwnProperty.call(charsets, typePart)) {
+    return charsets[typePart];
+  }
+
+  const knownText = new Set([
+    "text/cache-manifest",
+    "text/calendar",
+    "text/css",
+    "text/csv",
+    "text/html",
+    "text/javascript",
+    "text/markdown",
+    "text/plain",
+    "text/tab-separated-values",
+    "text/xml"
+  ]);
+
+  if (knownText.has(typePart)) return "UTF-8";
+
+  return false;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0011</h2>
+        <p>Validates a string as either a media type or resolvable extension, returning a media type string with a default charset when applicable.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L77-L98">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (str) {
+  
+  if (!str || typeof str !== 'string') {
+    return false
+  }
+
+  var mime = str.indexOf('/') === -1
+    ? exports.lookup(str)
+    : str
+
+  if (!mime) {
+    return false
+  }
+
+  
+  if (mime.indexOf('charset') === -1) {
+    var charset = exports.charset(mime)
+    if (charset) mime += '; charset=' + charset.toLowerCase()
+  }
+
+  return mime
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (typeof value !== "string" || value.length === 0) return false;
+
+  const known = {
+    html: "text/html",
+    htm: "text/html",
+    txt: "text/plain",
+    text: "text/plain",
+    css: "text/css",
+    csv: "text/csv",
+    js: "application/javascript",
+    mjs: "application/javascript",
+    json: "application/json",
+    map: "application/json",
+    xml: "application/xml",
+    svg: "image/svg+xml",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    pdf: "application/pdf",
+    wasm: "application/wasm"
+  };
+
+  const isType = /^[^\s/;]+\/[^\s;]+(?:\s*;\s*[^=;\s]+=[^;]+)*$/.test(value);
+  let result = isType ? value : known[value.replace(/^\.+/, "").toLowerCase()];
+
+  if (!result) return false;
+
+  if (!/(?:^|;)\s*charset\s*=/.test(result)) {
+    const base = result.split(";", 1)[0].trim().toLowerCase();
+    let fallback = null;
+
+    if (base.startsWith("text/")) fallback = "utf-8";
+    else if (base === "application/json" || base.endsWith("+json")) fallback = "utf-8";
+    else if (base === "application/javascript" || base === "application/xml" || base.endsWith("+xml")) fallback = "utf-8";
+
+    if (fallback) result += "; charset=" + fallback;
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0012</h2>
+        <p>Determines whether a supplied value names a known content type and returns its primary associated file extension, otherwise returning false.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L107-L123">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (type) {
+  if (!type || typeof type !== 'string') {
+    return false
+  }
+
+  
+  var match = EXTRACT_TYPE_REGEXP.exec(type)
+
+  
+  var exts = match &amp;&amp; exports.extensions[match[1].toLowerCase()]
+
+  if (!exts || !exts.length) {
+    return false
+  }
+
+  return exts[0]
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (!value || typeof value !== "string") return false;
+
+  var found = /^\s*([^;\s]+)(?:[;\s]|$)/.exec(value);
+  if (!found) return false;
+
+  var type = found[1].toLowerCase();
+  var extensions = {
+    "application/atom+xml": ["atom"],
+    "application/ecmascript": ["ecma"],
+    "application/gzip": ["gz"],
+    "application/javascript": ["js"],
+    "application/json": ["json"],
+    "application/ld+json": ["jsonld"],
+    "application/msword": ["doc"],
+    "application/octet-stream": ["bin"],
+    "application/ogg": ["ogx"],
+    "application/pdf": ["pdf"],
+    "application/postscript": ["ai"],
+    "application/rtf": ["rtf"],
+    "application/vnd.ms-excel": ["xls"],
+    "application/vnd.ms-powerpoint": ["ppt"],
+    "application/vnd.oasis.opendocument.presentation": ["odp"],
+    "application/vnd.oasis.opendocument.spreadsheet": ["ods"],
+    "application/vnd.oasis.opendocument.text": ["odt"],
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ["pptx"],
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ["xlsx"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
+    "application/wasm": ["wasm"],
+    "application/xhtml+xml": ["xhtml"],
+    "application/xml": ["xml"],
+    "application/zip": ["zip"],
+    "audio/aac": ["aac"],
+    "audio/midi": ["mid"],
+    "audio/mp3": ["mp3"],
+    "audio/mpeg": ["mpga"],
+    "audio/ogg": ["oga"],
+    "audio/wav": ["wav"],
+    "audio/webm": ["weba"],
+    "font/otf": ["otf"],
+    "font/ttf": ["ttf"],
+    "font/woff": ["woff"],
+    "font/woff2": ["woff2"],
+    "image/apng": ["apng"],
+    "image/avif": ["avif"],
+    "image/bmp": ["bmp"],
+    "image/gif": ["gif"],
+    "image/jpeg": ["jpeg"],
+    "image/png": ["png"],
+    "image/svg+xml": ["svg"],
+    "image/tiff": ["tiff"],
+    "image/webp": ["webp"],
+    "multipart/form-data": [],
+    "text/calendar": ["ics"],
+    "text/css": ["css"],
+    "text/csv": ["csv"],
+    "text/html": ["html"],
+    "text/javascript": ["js"],
+    "text/markdown": ["markdown"],
+    "text/plain": ["txt"],
+    "text/xml": ["xml"],
+    "video/mp4": ["mp4"],
+    "video/mpeg": ["mpeg"],
+    "video/ogg": ["ogv"],
+    "video/quicktime": ["mov"],
+    "video/webm": ["webm"],
+    "video/x-msvideo": ["avi"]
+  }[type];
+
+  return extensions &amp;&amp; extensions.length ? extensions[0] : false;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0013</h2>
+        <p>Determines whether a string has a recognized file extension and returns the associated type or false.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L132-L147">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (path) {
+  if (!path || typeof path !== 'string') {
+    return false
+  }
+
+  
+  var extension = extname('x.' + path)
+    .toLowerCase()
+    .substr(1)
+
+  if (!extension) {
+    return false
+  }
+
+  return exports.types[extension] || false
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return false;
+  }
+
+  var types = {
+    html: "text/html",
+    htm: "text/html",
+    shtml: "text/html",
+    js: "application/javascript",
+    mjs: "application/javascript",
+    json: "application/json",
+    map: "application/json",
+    rtf: "application/rtf",
+    txt: "text/plain",
+    text: "text/plain",
+    conf: "text/plain",
+    def: "text/plain",
+    list: "text/plain",
+    log: "text/plain",
+    in: "text/plain",
+    ini: "text/plain",
+    xml: "application/xml",
+    xsl: "application/xml",
+    xsd: "application/xml",
+    css: "text/css",
+    csv: "text/csv",
+    md: "text/markdown",
+    markdown: "text/markdown",
+    pdf: "application/pdf",
+    zip: "application/zip",
+    gz: "application/gzip",
+    gif: "image/gif",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    svg: "image/svg+xml",
+    webp: "image/webp",
+    ico: "image/vnd.microsoft.icon",
+    mp3: "audio/mpeg",
+    mp4: "video/mp4",
+    mpeg: "video/mpeg",
+    webm: "video/webm",
+    wasm: "application/wasm"
+  };
+
+  var normalized = value.toLowerCase();
+  var slash = Math.max(normalized.lastIndexOf("/"), normalized.lastIndexOf("\\"));
+  var name = normalized.slice(slash + 1);
+  var dot = name.lastIndexOf(".");
+  var suffix = dot === -1 ? name : name.slice(dot + 1);
+
+  if (!suffix || (dot === 0 &amp;&amp; slash !== -1 &amp;&amp; name.indexOf(".", 1) === -1)) {
+    return false;
+  }
+
+  return types[suffix] || false;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0014</h2>
+        <p>Builds lookup tables that associate media types with extensions and extensions with their selected media type.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L154-L188">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (extensions, types) {
+  
+  var preference = ['nginx', 'apache', undefined, 'iana']
+
+  Object.keys(db).forEach(function forEachMimeType (type) {
+    var mime = db[type]
+    var exts = mime.extensions
+
+    if (!exts || !exts.length) {
+      return
+    }
+
+    
+    extensions[type] = exts
+
+    
+    for (var i = 0; i &lt; exts.length; i++) {
+      var extension = exts[i]
+
+      if (types[extension]) {
+        var from = preference.indexOf(db[types[extension]].source)
+        var to = preference.indexOf(mime.source)
+
+        if (types[extension] !== 'application/octet-stream' &amp;&amp;
+          (from &gt; to || (from === to &amp;&amp; types[extension].substr(0, 12) === 'application/'))) {
+          
+          continue
+        }
+      }
+
+      
+      types[extension] = type
+    }
+  })
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(mediaTypeLookup, extensionLookup) {
+  var registry = typeof db !== 'undefined' ? db : typeof mimeDb !== 'undefined' ? mimeDb : typeof mimeDatabase !== 'undefined' ? mimeDatabase : null;
+  var sourceOrder = { nginx: 0, apache: 1, undefined: 2, iana: 3 };
+
+  Object.keys(registry || {}).forEach(function (mediaType) {
+    var metadata = registry[mediaType];
+    var suffixes = metadata &amp;&amp; metadata.extensions;
+
+    if (!suffixes || suffixes.length === 0) {
+      return;
+    }
+
+    mediaTypeLookup[mediaType] = suffixes;
+
+    suffixes.forEach(function (suffix) {
+      var currentType = extensionLookup[suffix];
+
+      if (currentType) {
+        var currentMetadata = registry[currentType] || {};
+        var currentRank = sourceOrder[String(currentMetadata.source)];
+        var nextRank = sourceOrder[String(metadata.source)];
+
+        if (currentRank === undefined) {
+          currentRank = sourceOrder.undefined;
+        }
+        if (nextRank === undefined) {
+          nextRank = sourceOrder.undefined;
+        }
+
+        if (currentType !== 'application/octet-stream' &amp;&amp;
+            (currentRank &gt; nextRank ||
+              (currentRank === nextRank &amp;&amp; currentType.indexOf('application/') === 0))) {
+          return;
+        }
+      }
+
+      extensionLookup[suffix] = mediaType;
+    });
+  });
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0015</h2>
+        <p>Registers file suffix mappings for a known content type when suffix metadata exists.</p>
+        <p><a href="https://github.com/jshttp/mime-types/blob/47b62ac45e9b176a2af35532d0eea4968bb9eb6d/index.js#L158-L187">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate (type) {
+    var mime = db[type]
+    var exts = mime.extensions
+
+    if (!exts || !exts.length) {
+      return
+    }
+
+    
+    extensions[type] = exts
+
+    
+    for (var i = 0; i &lt; exts.length; i++) {
+      var extension = exts[i]
+
+      if (types[extension]) {
+        var from = preference.indexOf(db[types[extension]].source)
+        var to = preference.indexOf(mime.source)
+
+        if (types[extension] !== 'application/octet-stream' &amp;&amp;
+          (from &gt; to || (from === to &amp;&amp; types[extension].substr(0, 12) === 'application/'))) {
+          
+          continue
+        }
+      }
+
+      
+      types[extension] = type
+    }
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(type) {
+  const record = db[type];
+  if (!record || !record.extensions || record.extensions.length === 0) return;
+
+  extensions[type] = record.extensions;
+
+  const rank = ["nginx", "apache", undefined, "iana"];
+
+  for (const suffix of record.extensions) {
+    const current = types[suffix];
+
+    if (current) {
+      const currentRank = rank.indexOf(db[current] &amp;&amp; db[current].source);
+      const nextRank = rank.indexOf(record.source);
+
+      if (current !== "application/octet-stream" &amp;&amp; (currentRank &gt; nextRank || (currentRank === nextRank &amp;&amp; current.slice(0, 12) === "application/"))) {
+        continue;
+      }
+    }
+
+    types[suffix] = type;
+  }
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0016</h2>
+        <p>Normalizes a slash-delimited relative path by removing redundant separators and current-directory segments while resolving parent-directory segments according to a boolean policy.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L34-L97">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path, allowAboveRoot) {
+  var res = '';
+  var lastSegmentLength = 0;
+  var lastSlash = -1;
+  var dots = 0;
+  var code;
+  for (var i = 0; i &lt;= path.length; ++i) {
+    if (i &lt; path.length)
+      code = path.charCodeAt(i);
+    else if (code === 47 )
+      break;
+    else
+      code = 47 ;
+    if (code === 47 ) {
+      if (lastSlash === i - 1 || dots === 1) {
+        
+      } else if (lastSlash !== i - 1 &amp;&amp; dots === 2) {
+        if (res.length &lt; 2 || lastSegmentLength !== 2 || res.charCodeAt(res.length - 1) !== 46  || res.charCodeAt(res.length - 2) !== 46 ) {
+          if (res.length &gt; 2) {
+            var lastSlashIndex = res.lastIndexOf('/');
+            if (lastSlashIndex !== res.length - 1) {
+              if (lastSlashIndex === -1) {
+                res = '';
+                lastSegmentLength = 0;
+              } else {
+                res = res.slice(0, lastSlashIndex);
+                lastSegmentLength = res.length - 1 - res.lastIndexOf('/');
+              }
+              lastSlash = i;
+              dots = 0;
+              continue;
+            }
+          } else if (res.length === 2 || res.length === 1) {
+            res = '';
+            lastSegmentLength = 0;
+            lastSlash = i;
+            dots = 0;
+            continue;
+          }
+        }
+        if (allowAboveRoot) {
+          if (res.length &gt; 0)
+            res += '/..';
+          else
+            res = '..';
+          lastSegmentLength = 2;
+        }
+      } else {
+        if (res.length &gt; 0)
+          res += '/' + path.slice(lastSlash + 1, i);
+        else
+          res = path.slice(lastSlash + 1, i);
+        lastSegmentLength = i - lastSlash - 1;
+      }
+      lastSlash = i;
+      dots = 0;
+    } else if (code === 46  &amp;&amp; dots !== -1) {
+      ++dots;
+    } else {
+      dots = -1;
+    }
+  }
+  return res;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(path, keepParents) {
+  if (path === "") return "";
+
+  const output = [];
+  const parts = path.split("/");
+
+  for (const part of parts) {
+    if (part === "" || part === ".") continue;
+
+    if (part === "..") {
+      const last = output[output.length - 1];
+      if (last &amp;&amp; last !== "..") {
+        output.pop();
+      } else if (keepParents) {
+        output.push("..");
+      }
+    } else {
+      output.push(part);
+    }
+  }
+
+  return output.join("/");
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0017</h2>
+        <p>Builds a path string from parsed path components, preferring explicit directory and filename values and otherwise composing missing filename text from stem plus extension.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L99-L109">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(sep, pathObject) {
+  var dir = pathObject.dir || pathObject.root;
+  var base = pathObject.base || (pathObject.name || '') + (pathObject.ext || '');
+  if (!dir) {
+    return base;
+  }
+  if (dir === pathObject.root) {
+    return dir + base;
+  }
+  return dir + sep + base;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(separator, parts) {
+  const folderText = parts.dir || parts.root;
+  const fileText = parts.base || `${parts.name || ""}${parts.ext || ""}`;
+
+  if (!folderText) {
+    return fileText;
+  }
+
+  return folderText === parts.root
+    ? folderText + fileText
+    : folderText + separator + fileText;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0018</h2>
+        <p>Resolves POSIX-style path segments into a normalized path using the current working directory when needed.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L113-L155">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate() {
+    var resolvedPath = '';
+    var resolvedAbsolute = false;
+    var cwd;
+
+    for (var i = arguments.length - 1; i &gt;= -1 &amp;&amp; !resolvedAbsolute; i--) {
+      var path;
+      if (i &gt;= 0)
+        path = arguments[i];
+      else {
+        if (cwd === undefined)
+          cwd = process.cwd();
+        path = cwd;
+      }
+
+      assertPath(path);
+
+      
+      if (path.length === 0) {
+        continue;
+      }
+
+      resolvedPath = path + '/' + resolvedPath;
+      resolvedAbsolute = path.charCodeAt(0) === 47 ;
+    }
+
+    
+    
+
+    
+    resolvedPath = normalizeStringPosix(resolvedPath, !resolvedAbsolute);
+
+    if (resolvedAbsolute) {
+      if (resolvedPath.length &gt; 0)
+        return '/' + resolvedPath;
+      else
+        return '/';
+    } else if (resolvedPath.length &gt; 0) {
+      return resolvedPath;
+    } else {
+      return '.';
+    }
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(...segments) {
+  for (const segment of segments) {
+    if (typeof segment !== "string") {
+      throw new TypeError("Path must be a string");
+    }
+  }
+
+  let hasAbsoluteBase = false;
+  const collected = [];
+
+  for (const segment of segments) {
+    if (segment === "") continue;
+
+    if (segment[0] === "/") {
+      collected.length = 0;
+      hasAbsoluteBase = true;
+    }
+
+    collected.push(segment);
+  }
+
+  if (!hasAbsoluteBase) {
+    let cwd = "";
+    if (typeof process !== "undefined" &amp;&amp; process &amp;&amp; typeof process.cwd === "function") {
+      cwd = process.cwd();
+    }
+
+    if (typeof cwd !== "string") {
+      throw new TypeError("Current working directory must be a string");
+    }
+
+    if (cwd !== "") {
+      if (cwd[0] === "/") {
+        hasAbsoluteBase = true;
+      }
+      collected.unshift(cwd);
+    }
+  }
+
+  const stack = [];
+  const raw = collected.join("/").split("/");
+
+  for (const item of raw) {
+    if (item === "" || item === ".") continue;
+
+    if (item === "..") {
+      if (stack.length &gt; 0 &amp;&amp; stack[stack.length - 1] !== "..") {
+        stack.pop();
+      } else if (!hasAbsoluteBase) {
+        stack.push("..");
+      }
+    } else {
+      stack.push(item);
+    }
+  }
+
+  if (hasAbsoluteBase) {
+    return stack.length === 0 ? "/" : "/" + stack.join("/");
+  }
+
+  return stack.length === 0 ? "." : stack.join("/");
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0019</h2>
+        <p>Normalizes a POSIX-style filesystem string while preserving whether it is absolute and whether it ends with a separator.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L157-L173">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path) {
+    assertPath(path);
+
+    if (path.length === 0) return '.';
+
+    var isAbsolute = path.charCodeAt(0) === 47 ;
+    var trailingSeparator = path.charCodeAt(path.length - 1) === 47 ;
+
+    
+    path = normalizeStringPosix(path, !isAbsolute);
+
+    if (path.length === 0 &amp;&amp; !isAbsolute) path = '.';
+    if (path.length &gt; 0 &amp;&amp; trailingSeparator) path += '/';
+
+    if (isAbsolute) return '/' + path;
+    return path;
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  if (typeof input !== "string") {
+    throw new TypeError("Expected a string");
+  }
+  if (input.indexOf("\0") !== -1) {
+    throw new TypeError("Path must not contain null bytes");
+  }
+
+  const absolute = input.charAt(0) === "/";
+  const keepSlash = input.length &gt; 0 &amp;&amp; input.charAt(input.length - 1) === "/";
+  const parts = input.split("/");
+  const output = [];
+
+  for (const part of parts) {
+    if (part === "" || part === ".") {
+      continue;
+    }
+
+    if (part === "..") {
+      if (absolute) {
+        if (output.length &gt; 0) {
+          output.pop();
+        }
+      } else if (output.length &gt; 0 &amp;&amp; output[output.length - 1] !== "..") {
+        output.pop();
+      } else {
+        output.push(part);
+      }
+    } else {
+      output.push(part);
+    }
+  }
+
+  let normalized = output.join("/");
+
+  if (absolute) {
+    normalized = "/" + normalized;
+  }
+
+  if (normalized === "") {
+    normalized = absolute ? "/" : ".";
+  }
+
+  if (keepSlash &amp;&amp; normalized !== "/") {
+    normalized += "/";
+  }
+
+  return normalized;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0020</h2>
+        <p>Combines zero or more path segments into a normalized POSIX-style path string.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L180-L197">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate() {
+    if (arguments.length === 0)
+      return '.';
+    var joined;
+    for (var i = 0; i &lt; arguments.length; ++i) {
+      var arg = arguments[i];
+      assertPath(arg);
+      if (arg.length &gt; 0) {
+        if (joined === undefined)
+          joined = arg;
+        else
+          joined += '/' + arg;
+      }
+    }
+    if (joined === undefined)
+      return '.';
+    return posix.normalize(joined);
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(...segments) {
+  for (const part of segments) {
+    if (typeof part !== "string") {
+      throw new TypeError("Path segment must be a string");
+    }
+  }
+
+  const kept = segments.filter((part) =&gt; part.length &gt; 0);
+  if (kept.length === 0) {
+    return ".";
+  }
+
+  const input = kept.join("/");
+  const absolute = input.startsWith("/");
+  const trailing = input.endsWith("/");
+  const stack = [];
+
+  for (const piece of input.split("/")) {
+    if (piece === "" || piece === ".") {
+      continue;
+    }
+    if (piece === "..") {
+      if (stack.length &gt; 0 &amp;&amp; stack[stack.length - 1] !== "..") {
+        stack.pop();
+      } else if (!absolute) {
+        stack.push("..");
+      }
+    } else {
+      stack.push(piece);
+    }
+  }
+
+  let output = stack.join("/");
+  if (absolute) {
+    output = "/" + output;
+  }
+  if (output === "") {
+    output = absolute ? "/" : ".";
+  }
+  if (trailing &amp;&amp; output !== "/" &amp;&amp; output !== ".") {
+    output += "/";
+  }
+  return output;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0021</h2>
+        <p>Computes the POSIX-style relative path needed to navigate from one supplied path to another.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L199-L287">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(from, to) {
+    assertPath(from);
+    assertPath(to);
+
+    if (from === to) return '';
+
+    from = posix.resolve(from);
+    to = posix.resolve(to);
+
+    if (from === to) return '';
+
+    
+    var fromStart = 1;
+    for (; fromStart &lt; from.length; ++fromStart) {
+      if (from.charCodeAt(fromStart) !== 47 )
+        break;
+    }
+    var fromEnd = from.length;
+    var fromLen = fromEnd - fromStart;
+
+    
+    var toStart = 1;
+    for (; toStart &lt; to.length; ++toStart) {
+      if (to.charCodeAt(toStart) !== 47 )
+        break;
+    }
+    var toEnd = to.length;
+    var toLen = toEnd - toStart;
+
+    
+    var length = fromLen &lt; toLen ? fromLen : toLen;
+    var lastCommonSep = -1;
+    var i = 0;
+    for (; i &lt;= length; ++i) {
+      if (i === length) {
+        if (toLen &gt; length) {
+          if (to.charCodeAt(toStart + i) === 47 ) {
+            
+            
+            return to.slice(toStart + i + 1);
+          } else if (i === 0) {
+            
+            
+            return to.slice(toStart + i);
+          }
+        } else if (fromLen &gt; length) {
+          if (from.charCodeAt(fromStart + i) === 47 ) {
+            
+            
+            lastCommonSep = i;
+          } else if (i === 0) {
+            
+            
+            lastCommonSep = 0;
+          }
+        }
+        break;
+      }
+      var fromCode = from.charCodeAt(fromStart + i);
+      var toCode = to.charCodeAt(toStart + i);
+      if (fromCode !== toCode)
+        break;
+      else if (fromCode === 47 )
+        lastCommonSep = i;
+    }
+
+    var out = '';
+    
+    
+    for (i = fromStart + lastCommonSep + 1; i &lt;= fromEnd; ++i) {
+      if (i === fromEnd || from.charCodeAt(i) === 47 ) {
+        if (out.length === 0)
+          out += '..';
+        else
+          out += '/..';
+      }
+    }
+
+    
+    
+    if (out.length &gt; 0)
+      return out + to.slice(toStart + lastCommonSep);
+    else {
+      toStart += lastCommonSep;
+      if (to.charCodeAt(toStart) === 47 )
+        ++toStart;
+      return to.slice(toStart);
+    }
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(from, to) {
+  if (typeof from !== "string" || typeof to !== "string") {
+    throw new TypeError("Path arguments must be strings");
+  }
+  if (from === to) {
+    return "";
+  }
+
+  function normalizeAbsolute(input) {
+    var base = "/";
+    if (input.charAt(0) !== "/" &amp;&amp; typeof process !== "undefined" &amp;&amp; process &amp;&amp; typeof process.cwd === "function") {
+      base = process.cwd() || "/";
+    }
+
+    var combined = input.charAt(0) === "/" ? input : base + "/" + input;
+    var pieces = combined.split("/");
+    var stack = [];
+
+    for (var i = 0; i &lt; pieces.length; i++) {
+      var part = pieces[i];
+      if (!part || part === ".") {
+        continue;
+      }
+      if (part === "..") {
+        if (stack.length) {
+          stack.pop();
+        }
+      } else {
+        stack.push(part);
+      }
+    }
+
+    return "/" + stack.join("/");
+  }
+
+  var start = normalizeAbsolute(from);
+  var end = normalizeAbsolute(to);
+
+  if (start === end) {
+    return "";
+  }
+
+  var startParts = start === "/" ? [] : start.slice(1).split("/");
+  var endParts = end === "/" ? [] : end.slice(1).split("/");
+  var shared = 0;
+
+  while (shared &lt; startParts.length &amp;&amp; shared &lt; endParts.length &amp;&amp; startParts[shared] === endParts[shared]) {
+    shared++;
+  }
+
+  var result = [];
+  for (var up = shared; up &lt; startParts.length; up++) {
+    result.push("..");
+  }
+  for (var down = shared; down &lt; endParts.length; down++) {
+    result.push(endParts[down]);
+  }
+
+  return result.join("/");
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0022</h2>
+        <p>Returns the POSIX-style parent directory for a slash-delimited filesystem location after validating the input.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L293-L316">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path) {
+    assertPath(path);
+    if (path.length === 0) return '.';
+    var code = path.charCodeAt(0);
+    var hasRoot = code === 47 ;
+    var end = -1;
+    var matchedSlash = true;
+    for (var i = path.length - 1; i &gt;= 1; --i) {
+      code = path.charCodeAt(i);
+      if (code === 47 ) {
+          if (!matchedSlash) {
+            end = i;
+            break;
+          }
+        } else {
+        
+        matchedSlash = false;
+      }
+    }
+
+    if (end === -1) return hasRoot ? '/' : '.';
+    if (hasRoot &amp;&amp; end === 1) return '
+    return path.slice(0, end);
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(location) {
+  if (typeof location !== "string") {
+    throw new TypeError("Path must be a string");
+  }
+
+  if (location.length === 0) {
+    return ".";
+  }
+
+  const startsAtRoot = location.charCodeAt(0) === 47;
+  let cut = -1;
+  let skippingSeparators = true;
+
+  for (let index = location.length - 1; index &gt;= 1; index -= 1) {
+    if (location.charCodeAt(index) === 47) {
+      if (!skippingSeparators) {
+        cut = index;
+        break;
+      }
+    } else {
+      skippingSeparators = false;
+    }
+  }
+
+  if (cut === -1) {
+    return startsAtRoot ? "/" : ".";
+  }
+
+  if (startsAtRoot &amp;&amp; cut === 1) {
+    return "//";
+  }
+
+  return location.slice(0, cut);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0023</h2>
+        <p>Returns the final non-empty POSIX-style path segment, optionally removing a matching trailing extension.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L318-L387">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path, ext) {
+    if (ext !== undefined &amp;&amp; typeof ext !== 'string') throw new TypeError('"ext" argument must be a string');
+    assertPath(path);
+
+    var start = 0;
+    var end = -1;
+    var matchedSlash = true;
+    var i;
+
+    if (ext !== undefined &amp;&amp; ext.length &gt; 0 &amp;&amp; ext.length &lt;= path.length) {
+      if (ext.length === path.length &amp;&amp; ext === path) return '';
+      var extIdx = ext.length - 1;
+      var firstNonSlashEnd = -1;
+      for (i = path.length - 1; i &gt;= 0; --i) {
+        var code = path.charCodeAt(i);
+        if (code === 47 ) {
+            
+            
+            if (!matchedSlash) {
+              start = i + 1;
+              break;
+            }
+          } else {
+          if (firstNonSlashEnd === -1) {
+            
+            
+            matchedSlash = false;
+            firstNonSlashEnd = i + 1;
+          }
+          if (extIdx &gt;= 0) {
+            
+            if (code === ext.charCodeAt(extIdx)) {
+              if (--extIdx === -1) {
+                
+                
+                end = i;
+              }
+            } else {
+              
+              
+              extIdx = -1;
+              end = firstNonSlashEnd;
+            }
+          }
+        }
+      }
+
+      if (start === end) end = firstNonSlashEnd;else if (end === -1) end = path.length;
+      return path.slice(start, end);
+    } else {
+      for (i = path.length - 1; i &gt;= 0; --i) {
+        if (path.charCodeAt(i) === 47 ) {
+            
+            
+            if (!matchedSlash) {
+              start = i + 1;
+              break;
+            }
+          } else if (end === -1) {
+          
+          
+          matchedSlash = false;
+          end = i + 1;
+        }
+      }
+
+      if (end === -1) return '';
+      return path.slice(start, end);
+    }
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input, extension) {
+  if (typeof input !== 'string') {
+    throw new TypeError('The path argument must be of type string. Received ' + typeof input);
+  }
+  if (arguments.length &gt; 1 &amp;&amp; typeof extension !== 'string') {
+    throw new TypeError('The ext argument must be of type string. Received ' + typeof extension);
+  }
+
+  if (arguments.length &gt; 1 &amp;&amp; extension === input) {
+    return '';
+  }
+
+  let end = input.length - 1;
+  while (end &gt;= 0 &amp;&amp; input.charCodeAt(end) === 47) {
+    end--;
+  }
+  if (end &lt; 0) {
+    return '';
+  }
+
+  let start = end;
+  while (start &gt;= 0 &amp;&amp; input.charCodeAt(start) !== 47) {
+    start--;
+  }
+
+  const segment = input.slice(start + 1, end + 1);
+  if (
+    arguments.length &gt; 1 &amp;&amp;
+    extension.length &gt; 0 &amp;&amp;
+    extension.length &lt; segment.length &amp;&amp;
+    segment.endsWith(extension)
+  ) {
+    return segment.slice(0, segment.length - extension.length);
+  }
+
+  return segment;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0024</h2>
+        <p>Returns the file extension from the final path segment, including its leading dot, after validating the input as a path string.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L389-L436">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path) {
+    assertPath(path);
+    var startDot = -1;
+    var startPart = 0;
+    var end = -1;
+    var matchedSlash = true;
+    
+    
+    var preDotState = 0;
+    for (var i = path.length - 1; i &gt;= 0; --i) {
+      var code = path.charCodeAt(i);
+      if (code === 47 ) {
+          
+          
+          if (!matchedSlash) {
+            startPart = i + 1;
+            break;
+          }
+          continue;
+        }
+      if (end === -1) {
+        
+        
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === 46 ) {
+          
+          if (startDot === -1)
+            startDot = i;
+          else if (preDotState !== 1)
+            preDotState = 1;
+      } else if (startDot !== -1) {
+        
+        
+        preDotState = -1;
+      }
+    }
+
+    if (startDot === -1 || end === -1 ||
+        
+        preDotState === 0 ||
+        
+        preDotState === 1 &amp;&amp; startDot === end - 1 &amp;&amp; startDot === startPart + 1) {
+      return '';
+    }
+    return path.slice(startDot, end);
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(path) {
+  if (typeof path !== "string") {
+    throw new TypeError("Path must be a string");
+  }
+
+  let end = path.length;
+  while (end &gt; 0 &amp;&amp; (path[end - 1] === "/" || path[end - 1] === "\\")) {
+    end--;
+  }
+
+  if (end === 0) {
+    return "";
+  }
+
+  const slash = path.lastIndexOf("/", end - 1);
+  const backslash = path.lastIndexOf("\\", end - 1);
+  const start = Math.max(slash, backslash) + 1;
+  const name = path.slice(start, end);
+
+  if (name === "." || name === "..") {
+    return "";
+  }
+
+  const dot = name.lastIndexOf(".");
+  if (dot &lt;= 0 || dot === name.length - 1) {
+    return "";
+  }
+
+  return name.slice(dot);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0025</h2>
+        <p>Parses a POSIX-style filesystem string into root, directory, filename, extension, and stem components.</p>
+        <p><a href="https://github.com/browserify/path-browserify/blob/872fec31a8bac7b9b43be0e54ef3037e0202c5fb/index.js#L445-L519">Human source</a> · MIT</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(path) {
+    assertPath(path);
+
+    var ret = { root: '', dir: '', base: '', ext: '', name: '' };
+    if (path.length === 0) return ret;
+    var code = path.charCodeAt(0);
+    var isAbsolute = code === 47 ;
+    var start;
+    if (isAbsolute) {
+      ret.root = '/';
+      start = 1;
+    } else {
+      start = 0;
+    }
+    var startDot = -1;
+    var startPart = 0;
+    var end = -1;
+    var matchedSlash = true;
+    var i = path.length - 1;
+
+    
+    
+    var preDotState = 0;
+
+    
+    for (; i &gt;= start; --i) {
+      code = path.charCodeAt(i);
+      if (code === 47 ) {
+          
+          
+          if (!matchedSlash) {
+            startPart = i + 1;
+            break;
+          }
+          continue;
+        }
+      if (end === -1) {
+        
+        
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === 46 ) {
+          
+          if (startDot === -1) startDot = i;else if (preDotState !== 1) preDotState = 1;
+        } else if (startDot !== -1) {
+        
+        
+        preDotState = -1;
+      }
+    }
+
+    if (startDot === -1 || end === -1 ||
+    
+    preDotState === 0 ||
+    
+    preDotState === 1 &amp;&amp; startDot === end - 1 &amp;&amp; startDot === startPart + 1) {
+      if (end !== -1) {
+        if (startPart === 0 &amp;&amp; isAbsolute) ret.base = ret.name = path.slice(1, end);else ret.base = ret.name = path.slice(startPart, end);
+      }
+    } else {
+      if (startPart === 0 &amp;&amp; isAbsolute) {
+        ret.name = path.slice(1, startDot);
+        ret.base = path.slice(1, end);
+      } else {
+        ret.name = path.slice(startPart, startDot);
+        ret.base = path.slice(startPart, end);
+      }
+      ret.ext = path.slice(startDot, end);
+    }
+
+    if (startPart &gt; 0) ret.dir = path.slice(0, startPart - 1);else if (isAbsolute) ret.dir = '/';
+
+    return ret;
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(path) {
+  let limit = path.length;
+  while (limit &gt; 0 &amp;&amp; path[limit - 1] === "/") limit--;
+
+  const root = path[0] === "/" ? "/" : "";
+
+  if (limit === 0) {
+    return { root, dir: root, base: "", ext: "", name: "" };
+  }
+
+  let split = -1;
+  for (let i = limit - 1; i &gt;= 0; i--) {
+    if (path[i] === "/") {
+      split = i;
+      break;
+    }
+  }
+
+  const base = path.slice(split + 1, limit);
+  let dir = "";
+  if (split === 0 &amp;&amp; root) dir = "/";
+  else if (split &gt; 0) dir = path.slice(0, split);
+
+  let dot = -1;
+  for (let i = base.length - 1; i &gt;= 0; i--) {
+    if (base[i] === ".") {
+      dot = i;
+      break;
+    }
+  }
+
+  let ext = "";
+  let name = base;
+  if (dot &gt; 0 &amp;&amp; !/^\.+$/.test(base)) {
+    ext = base.slice(dot);
+    name = base.slice(0, dot);
+  }
+
+  return { root, dir, base, ext, name };
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0026</h2>
+        <p>Parses an encoded parameter string into a key-value mapping according to configurable delimiter, decoding, charset, null, and array-handling rules.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L50-L112">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(str, options) {
+    var obj = {};
+    var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
+    var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
+    var parts = cleanStr.split(options.delimiter, limit);
+    var skipIndex = -1; 
+    var i;
+
+    var charset = options.charset;
+    if (options.charsetSentinel) {
+        for (i = 0; i &lt; parts.length; ++i) {
+            if (parts[i].indexOf('utf8=') === 0) {
+                if (parts[i] === charsetSentinel) {
+                    charset = 'utf-8';
+                } else if (parts[i] === isoSentinel) {
+                    charset = 'iso-8859-1';
+                }
+                skipIndex = i;
+                i = parts.length; 
+            }
+        }
+    }
+
+    for (i = 0; i &lt; parts.length; ++i) {
+        if (i === skipIndex) {
+            continue;
+        }
+        var part = parts[i];
+
+        var bracketEqualsPos = part.indexOf(']=');
+        var pos = bracketEqualsPos === -1 ? part.indexOf('=') : bracketEqualsPos + 1;
+
+        var key, val;
+        if (pos === -1) {
+            key = options.decoder(part, defaults.decoder, charset, 'key');
+            val = options.strictNullHandling ? null : '';
+        } else {
+            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
+            val = utils.maybeMap(
+                parseArrayValue(part.slice(pos + 1), options),
+                function (encodedVal) {
+                    return options.decoder(encodedVal, defaults.decoder, charset, 'value');
+                }
+            );
+        }
+
+        if (val &amp;&amp; options.interpretNumericEntities &amp;&amp; charset === 'iso-8859-1') {
+            val = interpretNumericEntities(val);
+        }
+
+        if (part.indexOf('[]=') &gt; -1) {
+            val = isArray(val) ? [val] : val;
+        }
+
+        if (has.call(obj, key)) {
+            obj[key] = utils.combine(obj[key], val);
+        } else {
+            obj[key] = val;
+        }
+    }
+
+    return obj;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input, options) {
+  const config = options || {};
+  const delimiter = config.delimiter === undefined ? '&amp;' : config.delimiter;
+  const limit = config.parameterLimit === undefined ? 1000 : config.parameterLimit;
+  const strictNull = config.strictNullHandling === true;
+  const useSentinel = config.charsetSentinel === true;
+  const numericEntities = config.interpretNumericEntities === true;
+  const commaArrays = config.comma === true;
+  const parseArrays = config.parseArrays !== false;
+  let charset = config.charset === 'iso-8859-1' ? 'iso-8859-1' : 'utf-8';
+  let text = String(input == null ? '' : input);
+
+  if (config.ignoreQueryPrefix) text = text.replace(/^\?/, '');
+  if (text.length === 0) return {};
+
+  const pieces = limit === Infinity ? text.split(delimiter) : text.split(delimiter, limit);
+  const result = {};
+
+  function decode(part) {
+    const raw = String(part).replace(/\+/g, ' ');
+    if (typeof config.decoder === 'function') {
+      return config.decoder(raw, decodeURIComponent, charset, 'value');
+    }
+    if (charset === 'iso-8859-1') {
+      let out = raw.replace(/%([0-9a-f]{2})/gi, function (_, hex) {
+        return String.fromCharCode(parseInt(hex, 16));
+      });
+      return numericEntities ? out.replace(/&amp;#(\d+);/g, function (_, code) {
+        return String.fromCharCode(parseInt(code, 10));
+      }) : out;
+    }
+    try {
+      return decodeURIComponent(raw);
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  function assign(target, key, value) {
+    if (Object.prototype.hasOwnProperty.call(target, key)) {
+      target[key] = Array.isArray(target[key]) ? target[key].concat(value) : [target[key]].concat(value);
+    } else {
+      target[key] = value;
+    }
+  }
+
+  function build(key, value) {
+    if (!parseArrays) return { key, value };
+    const match = /^(.*)\[\]$/.exec(key);
+    if (!match) return { key, value };
+    return { key: match[1], value: Array.isArray(value) ? [value] : [value] };
+  }
+
+  for (const item of pieces) {
+    if (item === '') continue;
+    const eq = item.indexOf('=');
+    let rawKey = eq &lt; 0 ? item : item.slice(0, eq);
+    let rawValue = eq &lt; 0 ? (strictNull ? null : '') : item.slice(eq + 1);
+
+    if (useSentinel &amp;&amp; rawKey === 'utf8') {
+      if (rawValue === '%E2%9C%93' || rawValue === '✓') charset = 'utf-8';
+      if (rawValue === '%26%2310003%3B' || rawValue === '&amp;#10003;') charset = 'iso-8859-1';
+      continue;
+    }
+
+    const decodedKey = decode(rawKey);
+    let decodedValue;
+    if (rawValue === null) {
+      decodedValue = null;
+    } else if (commaArrays &amp;&amp; rawValue.indexOf(',') &gt;= 0) {
+      decodedValue = rawValue.split(',').map(decode);
+    } else {
+      decodedValue = decode(rawValue);
+    }
+
+    const entry = build(decodedKey, decodedValue);
+    assign(result, entry.key, entry.value);
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0027</h2>
+        <p>Transforms a non-empty structured property string and associated data into a nested parsed object according to parsing options.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L149-L201">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(givenKey, val, options, valuesParsed) {
+    if (!givenKey) {
+        return;
+    }
+
+    
+    var key = options.allowDots ? givenKey.replace(/\.([^.[]+)/g, '[$1]') : givenKey;
+
+    
+
+    var brackets = /(\[[^[\]]*])/;
+    var child = /(\[[^[\]]*])/g;
+
+    
+
+    var segment = options.depth &gt; 0 &amp;&amp; brackets.exec(key);
+    var parent = segment ? key.slice(0, segment.index) : key;
+
+    
+
+    var keys = [];
+    if (parent) {
+        
+        if (!options.plainObjects &amp;&amp; has.call(Object.prototype, parent)) {
+            if (!options.allowPrototypes) {
+                return;
+            }
+        }
+
+        keys.push(parent);
+    }
+
+    
+
+    var i = 0;
+    while (options.depth &gt; 0 &amp;&amp; (segment = child.exec(key)) !== null &amp;&amp; i &lt; options.depth) {
+        i += 1;
+        if (!options.plainObjects &amp;&amp; has.call(Object.prototype, segment[1].slice(1, -1))) {
+            if (!options.allowPrototypes) {
+                return;
+            }
+        }
+        keys.push(segment[1]);
+    }
+
+    
+
+    if (segment) {
+        keys.push('[' + key.slice(segment.index) + ']');
+    }
+
+    return parseObject(keys, val, options, valuesParsed);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(expression, payload, config, parsedMeta) {
+  if (!expression) {
+    return undefined;
+  }
+
+  var opts = config || {};
+  var limit = typeof opts.depth === 'number' ? opts.depth : 5;
+  var text = String(expression);
+
+  if (opts.allowDots) {
+    text = text.replace(/\.([^.[\]]+)/g, '[$1]');
+  }
+
+  var guarded = Object.prototype.hasOwnProperty;
+  var pieces = [];
+
+  if (limit &gt; 0) {
+    var firstBracket = text.search(/\[[^[\]]*]/);
+    var root = firstBracket &gt;= 0 ? text.slice(0, firstBracket) : text;
+
+    if (root) {
+      if (!opts.plainObjects &amp;&amp; guarded.call(Object.prototype, root) &amp;&amp; !opts.allowPrototypes) {
+        return undefined;
+      }
+      pieces.push(root);
+    }
+
+    var matcher = /\[[^[\]]*]/g;
+    var match;
+    var count = 0;
+
+    while ((match = matcher.exec(text)) !== null &amp;&amp; count &lt; limit) {
+      var inner = match[0].slice(1, -1);
+      if (!opts.plainObjects &amp;&amp; guarded.call(Object.prototype, inner) &amp;&amp; !opts.allowPrototypes) {
+        return undefined;
+      }
+      pieces.push(match[0]);
+      count += 1;
+    }
+
+    if (match) {
+      pieces.push('[' + text.slice(match.index) + ']');
+    }
+  } else {
+    if (!opts.plainObjects &amp;&amp; guarded.call(Object.prototype, text) &amp;&amp; !opts.allowPrototypes) {
+      return undefined;
+    }
+    pieces.push(text);
+  }
+
+  var build = typeof opts.parseObject === 'function' ? opts.parseObject : candidate.parseObject;
+  return build(pieces, payload, opts, parsedMeta);
+}
+
+candidate.parseObject = function (segments, value, options, metadata) {
+  var opts = options || {};
+  var leaf = value;
+
+  for (var i = segments.length - 1; i &gt;= 0; i -= 1) {
+    var raw = segments[i];
+    var key = raw;
+    if (typeof key === 'string' &amp;&amp; key.charAt(0) === '[' &amp;&amp; key.charAt(key.length - 1) === ']') {
+      key = key.slice(1, -1);
+    }
+
+    var container;
+    if (key === '') {
+      container = [];
+      container.push(leaf);
+    } else if (!opts.parseArrays || !/^\d+$/.test(key)) {
+      container = opts.plainObjects ? Object.create(null) : {};
+      container[key] = leaf;
+    } else {
+      container = [];
+      container[Number(key)] = leaf;
+    }
+    leaf = container;
+  }
+
+  return leaf;
+};</code></pre>
+      </article>
+<article>
+        <h2>js_0028</h2>
+        <p>Normalizes an optional parsing configuration object into a complete options object using defaults and validating supported decoder and charset settings.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/parse.js#L203-L235">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(opts) {
+    if (!opts) {
+        return defaults;
+    }
+
+    if (opts.decoder !== null &amp;&amp; opts.decoder !== undefined &amp;&amp; typeof opts.decoder !== 'function') {
+        throw new TypeError('Decoder has to be a function.');
+    }
+
+    if (typeof opts.charset !== 'undefined' &amp;&amp; opts.charset !== 'utf-8' &amp;&amp; opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
+
+    return {
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
+        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
+        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
+        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
+        
+        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
+        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
+        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
+        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
+        parseArrays: opts.parseArrays !== false,
+        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>const candidateDefaultOptions = {
+  allowDots: false,
+  allowPrototypes: false,
+  arrayLimit: 20,
+  charset: 'utf-8',
+  charsetSentinel: false,
+  comma: false,
+  decoder: function (value) { return value; },
+  delimiter: '&amp;',
+  depth: 5,
+  ignoreQueryPrefix: false,
+  interpretNumericEntities: false,
+  parameterLimit: 1000,
+  parseArrays: true,
+  plainObjects: false,
+  strictNullHandling: false
+};
+
+function candidate(options) {
+  if (options == null) {
+    return candidateDefaultOptions;
+  }
+
+  if (options.decoder != null &amp;&amp; typeof options.decoder !== 'function') {
+    throw new TypeError('Decoder has to be a function.');
+  }
+
+  if (options.charset !== undefined &amp;&amp; options.charset !== 'utf-8' &amp;&amp; options.charset !== 'iso-8859-1') {
+    throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+  }
+
+  const isPattern = Object.prototype.toString.call(options.delimiter) === '[object RegExp]';
+
+  return {
+    allowDots: options.allowDots === undefined ? candidateDefaultOptions.allowDots : !!options.allowDots,
+    allowPrototypes: typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : candidateDefaultOptions.allowPrototypes,
+    arrayLimit: typeof options.arrayLimit === 'number' ? options.arrayLimit : candidateDefaultOptions.arrayLimit,
+    charset: options.charset === undefined ? candidateDefaultOptions.charset : options.charset,
+    charsetSentinel: typeof options.charsetSentinel === 'boolean' ? options.charsetSentinel : candidateDefaultOptions.charsetSentinel,
+    comma: typeof options.comma === 'boolean' ? options.comma : candidateDefaultOptions.comma,
+    decoder: typeof options.decoder === 'function' ? options.decoder : candidateDefaultOptions.decoder,
+    delimiter: typeof options.delimiter === 'string' || isPattern ? options.delimiter : candidateDefaultOptions.delimiter,
+    depth: typeof options.depth === 'number' || options.depth === false ? +options.depth : candidateDefaultOptions.depth,
+    ignoreQueryPrefix: options.ignoreQueryPrefix === true,
+    interpretNumericEntities: typeof options.interpretNumericEntities === 'boolean' ? options.interpretNumericEntities : candidateDefaultOptions.interpretNumericEntities,
+    parameterLimit: typeof options.parameterLimit === 'number' ? options.parameterLimit : candidateDefaultOptions.parameterLimit,
+    parseArrays: options.parseArrays !== false,
+    plainObjects: typeof options.plainObjects === 'boolean' ? options.plainObjects : candidateDefaultOptions.plainObjects,
+    strictNullHandling: typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : candidateDefaultOptions.strictNullHandling
+  };
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0029</h2>
+        <p>Serializes a value and its nested contents into formatted query-parameter fragments using configurable encoding, traversal, and null-handling options.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/stringify.js#L57-L146">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(
+    object,
+    prefix,
+    generateArrayPrefix,
+    strictNullHandling,
+    skipNulls,
+    encoder,
+    filter,
+    sort,
+    allowDots,
+    serializeDate,
+    formatter,
+    encodeValuesOnly,
+    charset
+) {
+    var obj = object;
+    if (typeof filter === 'function') {
+        obj = filter(prefix, obj);
+    } else if (obj instanceof Date) {
+        obj = serializeDate(obj);
+    } else if (generateArrayPrefix === 'comma' &amp;&amp; isArray(obj)) {
+        obj = utils.maybeMap(obj, function (value) {
+            if (value instanceof Date) {
+                return serializeDate(value);
+            }
+            return value;
+        }).join(',');
+    }
+
+    if (obj === null) {
+        if (strictNullHandling) {
+            return encoder &amp;&amp; !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key') : prefix;
+        }
+
+        obj = '';
+    }
+
+    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
+        if (encoder) {
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key');
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value'))];
+        }
+        return [formatter(prefix) + '=' + formatter(String(obj))];
+    }
+
+    var values = [];
+
+    if (typeof obj === 'undefined') {
+        return values;
+    }
+
+    var objKeys;
+    if (isArray(filter)) {
+        objKeys = filter;
+    } else {
+        var keys = Object.keys(obj);
+        objKeys = sort ? keys.sort(sort) : keys;
+    }
+
+    for (var i = 0; i &lt; objKeys.length; ++i) {
+        var key = objKeys[i];
+        var value = obj[key];
+
+        if (skipNulls &amp;&amp; value === null) {
+            continue;
+        }
+
+        var keyPrefix = isArray(obj)
+            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix
+            : prefix + (allowDots ? '.' + key : '[' + key + ']');
+
+        pushToArray(values, stringify(
+            value,
+            keyPrefix,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encoder,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly,
+            charset
+        ));
+    }
+
+    return values;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input, path, arrayKey, commaMode, allowEmptyArrays, strictNulls, omitNulls, encode, transform, order, dotKeys, dateToText, outputStyle, formatPart, valuesOnly, charset, seen) {
+  var isDate = function (x) {
+    return Object.prototype.toString.call(x) === '[object Date]';
+  };
+  var isBufferLike = function (x) {
+    return x &amp;&amp; typeof x === 'object' &amp;&amp; typeof x.copy === 'function' &amp;&amp; typeof x.fill === 'function' &amp;&amp; typeof x.readUInt8 === 'function';
+  };
+  var canWalk = function (x) {
+    return x !== null &amp;&amp; typeof x === 'object' &amp;&amp; !isDate(x) &amp;&amp; !isBufferLike(x);
+  };
+  var applyEncoder = function (text, kind) {
+    if (typeof encode !== 'function') {
+      return String(text);
+    }
+    return encode(text, undefined, charset, kind);
+  };
+  var applyFormatter = function (text) {
+    return typeof formatPart === 'function' ? formatPart(text, outputStyle) : text;
+  };
+  var keyText = function (text) {
+    var prepared = applyFormatter(String(text));
+    return valuesOnly ? prepared : applyEncoder(prepared, 'key');
+  };
+  var valueText = function (text) {
+    return applyEncoder(applyFormatter(String(text)), 'value');
+  };
+  var nextPath = function (base, prop) {
+    if (typeof arrayKey === 'function' &amp;&amp; prop &amp;&amp; prop._array === true) {
+      return arrayKey(base, prop.index);
+    }
+    var name = prop &amp;&amp; prop._array === true ? prop.index : prop;
+    if (base === undefined || base === null || base === '') {
+      return String(name);
+    }
+    if (dotKeys) {
+      return base + '.' + String(name);
+    }
+    return base + '[' + String(name) + ']';
+  };
+  var stack = seen || [];
+  var convert = input;
+
+  if (typeof transform === 'function') {
+    convert = transform(path, convert);
+  }
+
+  if (convert instanceof Date || isDate(convert)) {
+    convert = typeof dateToText === 'function' ? dateToText(convert) : convert.toISOString();
+  } else if (commaMode &amp;&amp; Array.isArray(convert)) {
+    var joined = [];
+    for (var a = 0; a &lt; convert.length; a += 1) {
+      var item = convert[a];
+      joined.push((item instanceof Date || isDate(item)) ? (typeof dateToText === 'function' ? dateToText(item) : item.toISOString()) : item);
+    }
+    if (path === undefined || path === null) {
+      return [valueText(joined.join(','))];
+    }
+    return [keyText(path) + '=' + valueText(joined.join(','))];
+  }
+
+  if (convert === null) {
+    if (omitNulls) {
+      return [];
+    }
+    if (strictNulls) {
+      return path === undefined || path === null ? [] : [keyText(path)];
+    }
+    convert = '';
+  }
+
+  if (typeof convert === 'undefined') {
+    return [];
+  }
+
+  if (!canWalk(convert)) {
+    if (path === undefined || path === null) {
+      return [valueText(convert)];
+    }
+    return [keyText(path) + '=' + valueText(convert)];
+  }
+
+  for (var s = 0; s &lt; stack.length; s += 1) {
+    if (stack[s] === convert) {
+      throw new RangeError('Cyclic object value');
+    }
+  }
+
+  var branch = stack.concat([convert]);
+  var parts = [];
+
+  if (Array.isArray(convert)) {
+    if (convert.length === 0) {
+      return allowEmptyArrays &amp;&amp; path !== undefined &amp;&amp; path !== null ? [keyText(path + '[]')] : [];
+    }
+    for (var i = 0; i &lt; convert.length; i += 1) {
+      var v = convert[i];
+      if ((v === null &amp;&amp; omitNulls) || typeof v === 'undefined') {
+        continue;
+      }
+      var childKey;
+      if (typeof arrayKey === 'function') {
+        childKey = arrayKey(path, i);
+      } else if (arrayKey === 'indices') {
+        childKey = nextPath(path, { _array: true, index: i });
+      } else if (arrayKey === 'repeat') {
+        childKey = path;
+      } else if (arrayKey === 'comma') {
+        childKey = path;
+      } else {
+        childKey = path + '[]';
+      }
+      parts = parts.concat(candidate(v, childKey, arrayKey, commaMode, allowEmptyArrays, strictNulls, omitNulls, encode, transform, order, dotKeys, dateToText, outputStyle, formatPart, valuesOnly, charset, branch));
+    }
+    return parts;
+  }
+
+  var keys = Array.isArray(transform) ? transform.slice() : Object.keys(convert);
+  if (typeof order === 'function') {
+    keys.sort(order);
+  }
+
+  for (var k = 0; k &lt; keys.length; k += 1) {
+    var key = keys[k];
+    if (!Object.prototype.propertyIsEnumerable.call(convert, key) &amp;&amp; !Object.prototype.hasOwnProperty.call(convert, key)) {
+      continue;
+    }
+    var val = convert[key];
+    if ((val === null &amp;&amp; omitNulls) || typeof val === 'undefined') {
+      continue;
+    }
+    parts = parts.concat(candidate(val, nextPath(path, key), arrayKey, commaMode, allowEmptyArrays, strictNulls, omitNulls, encode, transform, order, dotKeys, dateToText, outputStyle, formatPart, valuesOnly, charset, branch));
+  }
+
+  return parts;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0030</h2>
+        <p>Normalizes an optional configuration object into a complete serialization configuration with validation and defaults.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/stringify.js#L148-L192">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(opts) {
+    if (!opts) {
+        return defaults;
+    }
+
+    if (opts.encoder !== null &amp;&amp; opts.encoder !== undefined &amp;&amp; typeof opts.encoder !== 'function') {
+        throw new TypeError('Encoder has to be a function.');
+    }
+
+    var charset = opts.charset || defaults.charset;
+    if (typeof opts.charset !== 'undefined' &amp;&amp; opts.charset !== 'utf-8' &amp;&amp; opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+
+    var format = formats['default'];
+    if (typeof opts.format !== 'undefined') {
+        if (!has.call(formats.formatters, opts.format)) {
+            throw new TypeError('Unknown format option provided.');
+        }
+        format = opts.format;
+    }
+    var formatter = formats.formatters[format];
+
+    var filter = defaults.filter;
+    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
+        filter = opts.filter;
+    }
+
+    return {
+        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
+        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
+        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
+        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
+        filter: filter,
+        formatter: formatter,
+        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
+        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
+        sort: typeof opts.sort === 'function' ? opts.sort : null,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(settings) {
+  var formatters = {
+    RFC1738: function (value) {
+      return String(value).replace(/%20/g, '+');
+    },
+    RFC3986: function (value) {
+      return String(value);
+    }
+  };
+
+  function defaultEncoder(value) {
+    return encodeURIComponent(String(value));
+  }
+
+  function defaultDateSerializer(value) {
+    return value instanceof Date ? value.toISOString() : value;
+  }
+
+  var sharedDefault = candidate.defaultConfig || (candidate.defaultConfig = {
+    encoding: defaultEncoder,
+    textEncoding: 'utf-8',
+    format: 'RFC3986',
+    formatter: formatters.RFC3986,
+    filter: null,
+    allowDots: false,
+    encodeValuesOnly: false,
+    skipNulls: false,
+    strictNullHandling: false,
+    delimiter: '&amp;',
+    sort: null,
+    serializeDate: defaultDateSerializer
+  });
+
+  if (settings == null) {
+    return sharedDefault;
+  }
+
+  var encodingCallback = settings.encoding || settings.encoder;
+  if (encodingCallback != null &amp;&amp; typeof encodingCallback !== 'function') {
+    throw new TypeError('Encoder must be a function.');
+  }
+
+  var requestedEncoding = settings.textEncoding || settings.charset;
+  if (requestedEncoding == null) {
+    requestedEncoding = sharedDefault.textEncoding;
+  } else {
+    requestedEncoding = String(requestedEncoding).toLowerCase();
+    if (requestedEncoding !== 'utf-8' &amp;&amp; requestedEncoding !== 'iso-8859-1') {
+      throw new TypeError('The text encoding must be utf-8 or iso-8859-1.');
+    }
+  }
+
+  var requestedFormat = settings.format == null ? sharedDefault.format : settings.format;
+  if (!Object.prototype.hasOwnProperty.call(formatters, requestedFormat)) {
+    throw new TypeError('Unknown format option provided.');
+  }
+
+  return {
+    encoding: encodingCallback || sharedDefault.encoding,
+    textEncoding: requestedEncoding,
+    format: requestedFormat,
+    formatter: formatters[requestedFormat],
+    filter: typeof settings.filter === 'function' || Array.isArray(settings.filter) ? settings.filter : sharedDefault.filter,
+    allowDots: typeof settings.allowDots === 'boolean' ? settings.allowDots : !!settings.allowDots,
+    encodeValuesOnly: typeof settings.encodeValuesOnly === 'boolean' ? settings.encodeValuesOnly : sharedDefault.encodeValuesOnly,
+    skipNulls: typeof settings.skipNulls === 'boolean' ? settings.skipNulls : sharedDefault.skipNulls,
+    strictNullHandling: typeof settings.strictNullHandling === 'boolean' ? settings.strictNullHandling : sharedDefault.strictNullHandling,
+    delimiter: typeof settings.delimiter === 'string' ? settings.delimiter : sharedDefault.delimiter,
+    sort: typeof settings.sort === 'function' ? settings.sort : null,
+    serializeDate: typeof settings.serializeDate === 'function' ? settings.serializeDate : sharedDefault.serializeDate
+  };
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0031</h2>
+        <p>Mutates selected object properties by replacing array values with copies that omit undefined entries while leaving other values untouched.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L15-L32">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(queue) {
+    while (queue.length &gt; 1) {
+        var item = queue.pop();
+        var obj = item.obj[item.prop];
+
+        if (isArray(obj)) {
+            var compacted = [];
+
+            for (var j = 0; j &lt; obj.length; ++j) {
+                if (typeof obj[j] !== 'undefined') {
+                    compacted.push(obj[j]);
+                }
+            }
+
+            item.obj[item.prop] = compacted;
+        }
+    }
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(references) {
+  while (references.length &gt; 1) {
+    const reference = references.pop();
+    let owner;
+    let property;
+
+    if (Array.isArray(reference)) {
+      owner = reference[0];
+      property = reference[1];
+    } else {
+      owner = reference.owner ?? reference.object ?? reference.target;
+      property = reference.key ?? reference.property ?? reference.name;
+    }
+
+    const value = owner[property];
+    if (Array.isArray(value)) {
+      owner[property] = value.filter((entry) =&gt; entry !== undefined);
+    }
+  }
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0032</h2>
+        <p>Combines two inputs by preserving existing structure where possible and recursively merging compatible collection values.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L45-L100">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(target, source, options) {
+    
+    if (!source) {
+        return target;
+    }
+
+    if (typeof source !== 'object') {
+        if (isArray(target)) {
+            target.push(source);
+        } else if (target &amp;&amp; typeof target === 'object') {
+            if ((options &amp;&amp; (options.plainObjects || options.allowPrototypes)) || !has.call(Object.prototype, source)) {
+                target[source] = true;
+            }
+        } else {
+            return [target, source];
+        }
+
+        return target;
+    }
+
+    if (!target || typeof target !== 'object') {
+        return [target].concat(source);
+    }
+
+    var mergeTarget = target;
+    if (isArray(target) &amp;&amp; !isArray(source)) {
+        mergeTarget = arrayToObject(target, options);
+    }
+
+    if (isArray(target) &amp;&amp; isArray(source)) {
+        source.forEach(function (item, i) {
+            if (has.call(target, i)) {
+                var targetItem = target[i];
+                if (targetItem &amp;&amp; typeof targetItem === 'object' &amp;&amp; item &amp;&amp; typeof item === 'object') {
+                    target[i] = merge(targetItem, item, options);
+                } else {
+                    target.push(item);
+                }
+            } else {
+                target[i] = item;
+            }
+        });
+        return target;
+    }
+
+    return Object.keys(source).reduce(function (acc, key) {
+        var value = source[key];
+
+        if (has.call(acc, key)) {
+            acc[key] = merge(acc[key], value, options);
+        } else {
+            acc[key] = value;
+        }
+        return acc;
+    }, mergeTarget);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(first, second, options) {
+  if (!second) {
+    return first;
+  }
+
+  var owns = Object.prototype.hasOwnProperty;
+  var arrays = Array.isArray;
+  var allowProtected = !!(options &amp;&amp; (options.plainObjects || options.allowPrototypes || options.allowPrototypeProperties || options.allowUnsafeKeys));
+
+  function objectLike(value) {
+    return value !== null &amp;&amp; typeof value === 'object';
+  }
+
+  function keyAllowed(key) {
+    return allowProtected || !owns.call(Object.prototype, key);
+  }
+
+  function makeRecord() {
+    return options &amp;&amp; options.plainObjects ? Object.create(null) : {};
+  }
+
+  function join(left, right) {
+    if (!right) {
+      return left;
+    }
+
+    if (!objectLike(right)) {
+      if (arrays(left)) {
+        left.push(right);
+        return left;
+      }
+      if (left &amp;&amp; typeof left === 'object') {
+        var label = String(right);
+        if (keyAllowed(label)) {
+          left[label] = true;
+        }
+        return left;
+      }
+      return [left, right];
+    }
+
+    if (!objectLike(left)) {
+      return arrays(right) ? [left].concat(right) : [left, right];
+    }
+
+    if (arrays(left) &amp;&amp; arrays(right)) {
+      for (var i = 0; i &lt; right.length; i += 1) {
+        if (!owns.call(right, i)) {
+          continue;
+        }
+        if (owns.call(left, i)) {
+          if (objectLike(left[i]) &amp;&amp; objectLike(right[i])) {
+            left[i] = join(left[i], right[i]);
+          } else {
+            left.push(right[i]);
+          }
+        } else {
+          left[i] = right[i];
+        }
+      }
+      return left;
+    }
+
+    var base = left;
+    if (arrays(left) &amp;&amp; !arrays(right)) {
+      base = makeRecord();
+      for (var j = 0; j &lt; left.length; j += 1) {
+        if (owns.call(left, j)) {
+          base[j] = left[j];
+        }
+      }
+    }
+
+    var names = Object.keys(right);
+    for (var k = 0; k &lt; names.length; k += 1) {
+      var name = names[k];
+      if (owns.call(base, name)) {
+        base[name] = join(base[name], right[name]);
+      } else {
+        base[name] = right[name];
+      }
+    }
+    return base;
+  }
+
+  return join(first, second);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0033</h2>
+        <p>Percent-encodes a value into a URL-safe string, with alternate handling when ISO-8859-1 output is requested.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L123-L184">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(str, defaultEncoder, charset) {
+    
+    
+    if (str.length === 0) {
+        return str;
+    }
+
+    var string = str;
+    if (typeof str === 'symbol') {
+        string = Symbol.prototype.toString.call(str);
+    } else if (typeof str !== 'string') {
+        string = String(str);
+    }
+
+    if (charset === 'iso-8859-1') {
+        return escape(string).replace(/%u[0-9a-f]{4}/gi, function ($0) {
+            return '%26%23' + parseInt($0.slice(2), 16) + '%3B';
+        });
+    }
+
+    var out = '';
+    for (var i = 0; i &lt; string.length; ++i) {
+        var c = string.charCodeAt(i);
+
+        if (
+            c === 0x2D 
+            || c === 0x2E 
+            || c === 0x5F 
+            || c === 0x7E 
+            || (c &gt;= 0x30 &amp;&amp; c &lt;= 0x39) 
+            || (c &gt;= 0x41 &amp;&amp; c &lt;= 0x5A) 
+            || (c &gt;= 0x61 &amp;&amp; c &lt;= 0x7A) 
+        ) {
+            out += string.charAt(i);
+            continue;
+        }
+
+        if (c &lt; 0x80) {
+            out = out + hexTable[c];
+            continue;
+        }
+
+        if (c &lt; 0x800) {
+            out = out + (hexTable[0xC0 | (c &gt;&gt; 6)] + hexTable[0x80 | (c &amp; 0x3F)]);
+            continue;
+        }
+
+        if (c &lt; 0xD800 || c &gt;= 0xE000) {
+            out = out + (hexTable[0xE0 | (c &gt;&gt; 12)] + hexTable[0x80 | ((c &gt;&gt; 6) &amp; 0x3F)] + hexTable[0x80 | (c &amp; 0x3F)]);
+            continue;
+        }
+
+        i += 1;
+        c = 0x10000 + (((c &amp; 0x3FF) &lt;&lt; 10) | (string.charCodeAt(i) &amp; 0x3FF));
+        out += hexTable[0xF0 | (c &gt;&gt; 18)]
+            + hexTable[0x80 | ((c &gt;&gt; 12) &amp; 0x3F)]
+            + hexTable[0x80 | ((c &gt;&gt; 6) &amp; 0x3F)]
+            + hexTable[0x80 | (c &amp; 0x3F)];
+    }
+
+    return out;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value, encoder, charset) {
+  if (value.length === 0) {
+    return value;
+  }
+
+  var text = typeof value === "symbol" ? value.toString() : String(value);
+
+  if (charset === "ISO-8859-1") {
+    return escape(text).replace(/%u([0-9a-fA-F]{4})/g, function(match, hex) {
+      return "%26%23" + parseInt(hex, 16) + "%3B";
+    });
+  }
+
+  var result = "";
+  for (var i = 0; i &lt; text.length; i++) {
+    var code = text.charCodeAt(i);
+
+    if (
+      (code &gt;= 48 &amp;&amp; code &lt;= 57) ||
+      (code &gt;= 65 &amp;&amp; code &lt;= 90) ||
+      (code &gt;= 97 &amp;&amp; code &lt;= 122) ||
+      code === 45 ||
+      code === 46 ||
+      code === 95 ||
+      code === 126
+    ) {
+      result += text.charAt(i);
+    } else if (code &lt; 128) {
+      result += "%" + code.toString(16).toUpperCase().padStart(2, "0");
+    } else if (code &lt; 2048) {
+      result += "%" + (192 | (code &gt;&gt; 6)).toString(16).toUpperCase();
+      result += "%" + (128 | (code &amp; 63)).toString(16).toUpperCase();
+    } else if (code &lt; 55296 || code &gt; 57343) {
+      result += "%" + (224 | (code &gt;&gt; 12)).toString(16).toUpperCase();
+      result += "%" + (128 | ((code &gt;&gt; 6) &amp; 63)).toString(16).toUpperCase();
+      result += "%" + (128 | (code &amp; 63)).toString(16).toUpperCase();
+    } else {
+      i++;
+      var next = text.charCodeAt(i);
+      var point = 65536 + (((code &amp; 1023) &lt;&lt; 10) | (next &amp; 1023));
+      result += "%" + (240 | (point &gt;&gt; 18)).toString(16).toUpperCase();
+      result += "%" + (128 | ((point &gt;&gt; 12) &amp; 63)).toString(16).toUpperCase();
+      result += "%" + (128 | ((point &gt;&gt; 6) &amp; 63)).toString(16).toUpperCase();
+      result += "%" + (128 | (point &amp; 63)).toString(16).toUpperCase();
+    }
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0034</h2>
+        <p>Traverses the input's reachable own enumerable object-valued properties, runs a compaction step on the collected references, and returns the original input.</p>
+        <p><a href="https://github.com/ljharb/qs/blob/8e014a7b1749ccec52104121950e7b0d251caa78/lib/utils.js#L186-L208">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(value) {
+    var queue = [{ obj: { o: value }, prop: 'o' }];
+    var refs = [];
+
+    for (var i = 0; i &lt; queue.length; ++i) {
+        var item = queue[i];
+        var obj = item.obj[item.prop];
+
+        var keys = Object.keys(obj);
+        for (var j = 0; j &lt; keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === 'object' &amp;&amp; val !== null &amp;&amp; refs.indexOf(val) === -1) {
+                queue.push({ obj: obj, prop: key });
+                refs.push(val);
+            }
+        }
+    }
+
+    compactQueue(queue);
+
+    return value;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  var records = [];
+  var seen = typeof Set === "function" ? new Set() : null;
+
+  function hasVisited(value) {
+    if (seen) {
+      if (seen.has(value)) return true;
+      seen.add(value);
+      return false;
+    }
+    for (var i = 0; i &lt; records.length; i++) {
+      if (records[i] === value) return true;
+    }
+    return false;
+  }
+
+  function walk(value) {
+    Object.keys(value);
+    if ((typeof value !== "object" &amp;&amp; typeof value !== "function") || value === null) return;
+    if (hasVisited(value)) return;
+    records.push(value);
+
+    var keys = Object.keys(value);
+    for (var i = 0; i &lt; keys.length; i++) {
+      var next = value[keys[i]];
+      if (next !== null &amp;&amp; typeof next === "object") {
+        walk(next);
+      }
+    }
+  }
+
+  walk(input);
+
+  if (typeof compact === "function") {
+    compact(records);
+  } else if (typeof globalThis !== "undefined" &amp;&amp; typeof globalThis.compact === "function") {
+    globalThis.compact(records);
+  }
+
+  return input;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0035</h2>
+        <p>Connects a text input inside a selected page element to a callback so the callback receives the current value immediately and after user edits.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/bench/bench-dom-bindings.js#L5-L15">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(labelId, updater) {
+  const label = document.getElementById(labelId);
+  const input = label.querySelector("input");
+
+  input.addEventListener("input", e =&gt; {
+    e.preventDefault();
+    updater(input.value);
+  });
+
+  updater(input.value);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(identifier, handler) {
+  const container = document.getElementById(identifier);
+  if (!container) {
+    throw new Error("Element not found");
+  }
+
+  const textBox = container.querySelector('input[type="text"], input:not([type])');
+  if (!textBox) {
+    throw new Error("Input not found");
+  }
+
+  const sendValue = () =&gt; handler(textBox.value);
+
+  textBox.addEventListener("input", event =&gt; {
+    event.preventDefault();
+    sendValue();
+  });
+
+  sendValue();
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0036</h2>
+        <p>Registers a click-driven benchmark run that prevents the default action, runs an asynchronous measurement, and displays tabular statistics plus per-sample export text.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/bench/bench-dom-bindings.js#L74-L114">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(button, results, benchName, bencher) {
+  button.addEventListener("click", async function (e) {
+    e.preventDefault();
+
+    const buttons = [...document.querySelectorAll("button")];
+    buttons.forEach(b =&gt; b.setAttribute("disabled", true));
+    results.innerHTML = "";
+    await new Promise(r =&gt; requestAnimationFrame(r));
+
+    var stats = await bencher();
+
+    buttons.forEach(b =&gt; b.removeAttribute("disabled"));
+
+    const csv = stats
+          .xs
+          .map(x =&gt; `"${implAndBrowser}",${testSourceMap.mappings.length},"${benchName}",${x}`)
+          .join("\n");
+
+    results.innerHTML = `
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;td&gt;Samples&lt;/td&gt;
+            &lt;td&gt;Total (${stats.unit})&lt;/th&gt;
+            &lt;td&gt;Mean (${stats.unit})&lt;/th&gt;
+            &lt;td&gt;Standard Deviation (${stats.unit})&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;${stats.samples()}&lt;/td&gt;
+            &lt;td&gt;${stats.total().toFixed(2)}&lt;/td&gt;
+            &lt;td&gt;${stats.mean().toFixed(2)}&lt;/td&gt;
+            &lt;td&gt;${stats.stddev().toFixed(2)}&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+      &lt;pre style="overflow:scroll;max-height:100px; max-width:500px;outline:1px solid black"&gt;${csv}&lt;/pre&gt;
+    `;
+  }, false);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(control, output, label, measure) {
+  control.addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    var buttons = Array.prototype.slice.call(document.querySelectorAll("button"));
+    buttons.forEach(function (button) {
+      button.disabled = true;
+    });
+
+    output.textContent = "";
+
+    await new Promise(function (resolve) {
+      requestAnimationFrame(resolve);
+    });
+
+    var result = await measure();
+
+    buttons.forEach(function (button) {
+      button.disabled = false;
+    });
+
+    var unit = result.unit;
+    var samples = result.samples;
+    var rowData = [
+      ["samples", samples.length],
+      ["total (" + unit + ")", result.total().toFixed(2)],
+      ["mean (" + unit + ")", result.mean().toFixed(2)],
+      ["standard deviation (" + unit + ")", result.standardDeviation().toFixed(2)]
+    ];
+
+    var table = document.createElement("table");
+    var body = document.createElement("tbody");
+
+    rowData.forEach(function (entry) {
+      var row = document.createElement("tr");
+      var nameCell = document.createElement("th");
+      var valueCell = document.createElement("td");
+      nameCell.textContent = entry[0];
+      valueCell.textContent = entry[1];
+      row.appendChild(nameCell);
+      row.appendChild(valueCell);
+      body.appendChild(row);
+    });
+
+    table.appendChild(body);
+    output.appendChild(table);
+
+    var environmentLabel = window.environmentLabel;
+    var mappingCount = window.mappings.length;
+    var exportBox = document.createElement("textarea");
+    exportBox.value = samples.map(function (sample) {
+      return [environmentLabel, mappingCount, label, sample].join("\t");
+    }).join("\n");
+    output.appendChild(exportBox);
+  });
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0037</h2>
+        <p>Encodes a signed integer into a Base64 VLQ string.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/base64-vlq.js#L93-L111">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aValue) {
+  let encoded = "";
+  let digit;
+
+  let vlq = toVLQSigned(aValue);
+
+  do {
+    digit = vlq &amp; VLQ_BASE_MASK;
+    vlq &gt;&gt;&gt;= VLQ_BASE_SHIFT;
+    if (vlq &gt; 0) {
+      
+      
+      digit |= VLQ_CONTINUATION_BIT;
+    }
+    encoded += base64.encode(digit);
+  } while (vlq &gt; 0);
+
+  return encoded;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const number = Math.trunc(Number(input));
+  let remaining = number &lt; 0 ? Math.abs(number) * 2 + 1 : number * 2;
+  let encoded = "";
+
+  do {
+    let chunk = remaining % 32;
+    remaining = Math.floor(remaining / 32);
+    if (remaining &gt; 0) chunk += 32;
+    encoded += alphabet[chunk];
+  } while (remaining &gt; 0);
+
+  return encoded;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0038</h2>
+        <p>Searches a sorted range and returns the index of an exact match or the nearest valid fallback according to the configured bound policy.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/binary-search.js#L24-L65">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  const mid = Math.floor((aHigh - aLow) / 2) + aLow;
+  const cmp = aCompare(aNeedle, aHaystack[mid], true);
+  if (cmp === 0) {
+    
+    return mid;
+  } else if (cmp &gt; 0) {
+    
+    if (aHigh - mid &gt; 1) {
+      
+      return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare, aBias);
+    }
+
+    
+    
+    if (aBias == exports.LEAST_UPPER_BOUND) {
+      return aHigh &lt; aHaystack.length ? aHigh : -1;
+    }
+    return mid;
+  }
+
+  
+  if (mid - aLow &gt; 1) {
+    
+    return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare, aBias);
+  }
+
+  
+  if (aBias == exports.LEAST_UPPER_BOUND) {
+    return mid;
+  }
+  return aLow &lt; 0 ? -1 : aLow;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(start, stop, value, list, compare, mode) {
+  function isUpperChoice(flag) {
+    if (flag === true || flag === 2) {
+      return true;
+    }
+    if (typeof exports === "object" &amp;&amp; exports &amp;&amp; flag == exports.LEAST_UPPER_BOUND) {
+      return true;
+    }
+    if (typeof flag === "string") {
+      var normalized = flag.toLowerCase();
+      return normalized === "upper" || normalized === "least_upper_bound" || normalized === "least-upper-bound";
+    }
+    return false;
+  }
+
+  var left = start;
+  var right = stop;
+  var preferUpper = isUpperChoice(mode);
+
+  while (true) {
+    var index = left + Math.floor((right - left) / 2);
+    var ordering = compare(value, list[index], true);
+
+    if (ordering === 0) {
+      return index;
+    }
+
+    if (ordering &gt; 0) {
+      if (right - index &gt; 1) {
+        left = index;
+        continue;
+      }
+      return preferUpper ? (right &lt; list.length ? right : -1) : index;
+    }
+
+    if (index - left &gt; 1) {
+      right = index;
+      continue;
+    }
+
+    return preferUpper ? index : (left &lt; 0 ? -1 : left);
+  }
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0039</h2>
+        <p>Searches an ordered collection for a target and returns the earliest zero-based position among adjacent equivalent matches, or -1 when no suitable match exists.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/binary-search.js#L85-L107">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aNeedle, aHaystack, aCompare, aBias) {
+  if (aHaystack.length === 0) {
+    return -1;
+  }
+
+  let index = recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack,
+                              aCompare, aBias || exports.GREATEST_LOWER_BOUND);
+  if (index &lt; 0) {
+    return -1;
+  }
+
+  
+  
+  
+  while (index - 1 &gt;= 0) {
+    if (aCompare(aHaystack[index], aHaystack[index - 1], true) !== 0) {
+      break;
+    }
+    --index;
+  }
+
+  return index;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(target, collection, compare, bias) {
+  if (collection.length === 0) {
+    return -1;
+  }
+
+  const wantsUpper = bias == 2 || bias === "LEAST_UPPER_BOUND" || bias === "least-upper-bound";
+  let left = -1;
+  let right = collection.length;
+  let found = -1;
+
+  while (right - left &gt; 1) {
+    const middle = left + Math.floor((right - left) / 2);
+    const order = compare(target, collection[middle], true);
+
+    if (order === 0) {
+      found = middle;
+      break;
+    }
+
+    if (order &gt; 0) {
+      left = middle;
+    } else {
+      right = middle;
+    }
+  }
+
+  let result = found;
+  if (result &lt; 0) {
+    result = wantsUpper ? right : left;
+  }
+
+  if (result &lt; 0 || result &gt;= collection.length) {
+    return -1;
+  }
+
+  while (result &gt; 0 &amp;&amp; compare(collection[result], collection[result - 1], true) === 0) {
+    result -= 1;
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0040</h2>
+        <p>Determines whether the second source-mapping position should be treated as at or after the first in generated-output order.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/mapping-list.js#L14-L22">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(mappingA, mappingB) {
+  
+  const lineA = mappingA.generatedLine;
+  const lineB = mappingB.generatedLine;
+  const columnA = mappingA.generatedColumn;
+  const columnB = mappingB.generatedColumn;
+  return lineB &gt; lineA || lineB == lineA &amp;&amp; columnB &gt;= columnA ||
+         util.compareByGeneratedPositionsInflated(mappingA, mappingB) &lt;= 0;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(first, second) {
+  if (second.generatedLine &gt; first.generatedLine) {
+    return true;
+  }
+
+  if (second.generatedLine === first.generatedLine &amp;&amp; second.generatedColumn &gt;= first.generatedColumn) {
+    return true;
+  }
+
+  const compare = typeof candidate.compareGenerated === "function"
+    ? candidate.compareGenerated
+    : defaultGeneratedCompare;
+
+  return compare(first, second) &lt;= 0;
+}
+
+function defaultGeneratedCompare(left, right) {
+  const leftLine = Number(left.generatedLine);
+  const rightLine = Number(right.generatedLine);
+
+  if (leftLine !== rightLine) {
+    return leftLine - rightLine;
+  }
+
+  const leftColumn = Number(left.generatedColumn);
+  const rightColumn = Number(right.generatedColumn);
+
+  if (leftColumn !== rightColumn) {
+    return leftColumn - rightColumn;
+  }
+
+  return 0;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0041</h2>
+        <p>Returns a promise that resolves with the underlying binary buffer of a bundled WebAssembly file or rejects if the file cannot be read.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/read-wasm.js#L23-L35">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate() {
+    return new Promise((resolve, reject) =&gt; {
+      const wasmPath = path.join(__dirname, "mappings.wasm");
+      fs.readFile(wasmPath, null, (error, data) =&gt; {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(data.buffer);
+      });
+    });
+  }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate() {
+  const fs = require("fs");
+  const path = require("path");
+
+  return new Promise((resolve, reject) =&gt; {
+    fs.readFile(path.join(__dirname, "bundle.wasm"), (error, data) =&gt; {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve(data.buffer);
+    });
+  });
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0042</h2>
+        <p>Creates a promise for an appropriate source map consumer from either serialized or structured source map input.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/source-map-consumer.js#L1240-L1250">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aSourceMap, aSourceMapURL) {
+  let sourceMap = aSourceMap;
+  if (typeof aSourceMap === "string") {
+    sourceMap = util.parseSourceMapInput(aSourceMap);
+  }
+
+  const consumer = sourceMap.sections != null
+      ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL)
+      : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
+  return Promise.resolve(consumer);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(sourceMapData, sourceMapUrl) {
+  const parsedMap = typeof sourceMapData === "string" ? JSON.parse(sourceMapData) : sourceMapData;
+  const consumer = "sections" in parsedMap
+    ? new IndexedSourceMapConsumer(parsedMap, sourceMapUrl)
+    : new BasicSourceMapConsumer(parsedMap, sourceMapUrl);
+
+  return Promise.resolve(consumer);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0043</h2>
+        <p>Adds generated content to an output structure, either plain or annotated with original-source metadata when available.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/source-node.js#L151-L164">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(mapping, code) {
+      if (mapping === null || mapping.source === undefined) {
+        node.add(code);
+      } else {
+        const source = aRelativePath
+          ? util.join(aRelativePath, mapping.source)
+          : mapping.source;
+        node.add(new SourceNode(mapping.originalLine,
+                                mapping.originalColumn,
+                                source,
+                                code,
+                                mapping.name));
+      }
+    }</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(mapping, segment) {
+  var target = this &amp;&amp; (this.node || this.output || this.current || this);
+  var base = this &amp;&amp; (this.baseReference || this.base || this.relativePath || this.sourceRoot);
+
+  if (!mapping || mapping.source == null) {
+    return target.add(segment);
+  }
+
+  var source = mapping.source;
+  if (base) {
+    if (typeof require === "function") {
+      try {
+        var path = require("path");
+        source = path.posix ? path.posix.join(base, source) : path.join(base, source);
+      } catch (e) {
+        source = String(base).replace(/\/$/, "") + "/" + String(source).replace(/^\//, "");
+      }
+    } else {
+      source = String(base).replace(/\/$/, "") + "/" + String(source).replace(/^\//, "");
+    }
+  }
+
+  if (typeof SourceNode !== "undefined") {
+    return target.add(new SourceNode(
+      mapping.originalLine,
+      mapping.originalColumn,
+      source,
+      segment,
+      mapping.name
+    ));
+  }
+
+  return target.add({
+    line: mapping.originalLine,
+    column: mapping.originalColumn,
+    source: source,
+    name: mapping.name,
+    content: segment
+  });
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0044</h2>
+        <p>Parses a URL-like string into its recognized components, or returns null when it does not match the expected URL format.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L32-L44">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aUrl) {
+  const match = aUrl.match(urlRegexp);
+  if (!match) {
+    return null;
+  }
+  return {
+    scheme: match[1],
+    auth: match[2],
+    host: match[3],
+    port: match[4],
+    path: match[5]
+  };
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const parsed = value.match(/^([A-Za-z][A-Za-z0-9+.-]*):\/\/(?:(?:([^@/?#]*)@))?(\[[^\]]+\]|[^:/?#]+)(?::([0-9]+))?([^?#]*)?(?:[?#].*)?$/);
+
+  if (!parsed) {
+    return null;
+  }
+
+  const result = {
+    protocol: parsed[1],
+    host: parsed[3]
+  };
+
+  if (parsed[2] !== undefined) {
+    result.credentials = parsed[2];
+  }
+
+  if (parsed[4] !== undefined) {
+    result.port = parsed[4];
+  }
+
+  if (parsed[5] !== undefined) {
+    result.path = parsed[5];
+  }
+
+  return result;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0045</h2>
+        <p>Serializes a parsed URL-like value into a URL string from its available components.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L47-L66">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aParsedUrl) {
+  let url = "";
+  if (aParsedUrl.scheme) {
+    url += aParsedUrl.scheme + ":";
+  }
+  url += "
+  if (aParsedUrl.auth) {
+    url += aParsedUrl.auth + "@";
+  }
+  if (aParsedUrl.host) {
+    url += aParsedUrl.host;
+  }
+  if (aParsedUrl.port) {
+    url += ":" + aParsedUrl.port;
+  }
+  if (aParsedUrl.path) {
+    url += aParsedUrl.path;
+  }
+  return url;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(input) {
+  const value = input || {};
+  let output = "";
+
+  const read = (...keys) =&gt; {
+    for (const key of keys) {
+      if (value[key] !== undefined &amp;&amp; value[key] !== null &amp;&amp; value[key] !== "") {
+        return String(value[key]);
+      }
+    }
+    return "";
+  };
+
+  const scheme = read("scheme", "protocol");
+  const credentials = read("credentials", "auth", "userinfo", "userInfo");
+  const location = read("netloc", "networkLocation", "host", "hostname");
+  const port = read("port");
+  const path = read("path", "pathname");
+
+  if (scheme) output += scheme.endsWith(":") ? scheme : scheme + ":";
+  if (value.slashes || value.authorityDelimiter || value.hasAuthority || credentials || location || port) output += "//";
+  if (credentials) output += credentials + "@";
+  if (location) output += location;
+  if (port) output += ":" + String(port).replace(/^:/, "");
+  if (path) output += path;
+
+  return output;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0046</h2>
+        <p>Wraps a single-argument callable with bounded memoization so repeated arguments can reuse previously computed return values.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L78-L104">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(f) {
+  const cache = [];
+
+  return function(input) {
+    for (let i = 0; i &lt; cache.length; i++) {
+      if (cache[i].input === input) {
+        const temp = cache[0];
+        cache[0] = cache[i];
+        cache[i] = temp;
+        return cache[0].result;
+      }
+    }
+
+    const result = f(input);
+
+    cache.unshift({
+      input,
+      result,
+    });
+
+    if (cache.length &gt; MAX_CACHED_INPUTS) {
+      cache.pop();
+    }
+
+    return result;
+  };
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(fn, capacity) {
+  const max = capacity === undefined ? 1 : Math.max(0, Math.floor(capacity));
+  const entries = [];
+
+  return function(arg) {
+    for (let i = 0; i &lt; entries.length; i += 1) {
+      if (entries[i].key === arg) {
+        const hit = entries[i];
+        if (i !== entries.length - 1) {
+          entries.splice(i, 1);
+          entries.push(hit);
+        }
+        return hit.value;
+      }
+    }
+
+    const value = fn(arg);
+
+    if (max &gt; 0) {
+      entries.push({ key: arg, value: value });
+      if (entries.length &gt; max) {
+        entries.shift();
+      }
+    }
+
+    return value;
+  };
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0047</h2>
+        <p>Normalizes a path or URL-like string by resolving dot segments and redundant separators while preserving absolute and URL structure.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L117-L178">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aPath) {
+  let path = aPath;
+  const url = urlParse(aPath);
+  if (url) {
+    if (!url.path) {
+      return aPath;
+    }
+    path = url.path;
+  }
+  const isAbsolute = exports.isAbsolute(path);
+
+  
+  
+  const parts = [];
+  let start = 0;
+  let i = 0;
+  while (true) {
+    start = i;
+    i = path.indexOf("/", start);
+    if (i === -1) {
+      parts.push(path.slice(start));
+      break;
+    } else {
+      parts.push(path.slice(start, i));
+      while (i &lt; path.length &amp;&amp; path[i] === "/") {
+        i++;
+      }
+    }
+  }
+
+  let up = 0;
+  for (i = parts.length - 1; i &gt;= 0; i--) {
+    const part = parts[i];
+    if (part === ".") {
+      parts.splice(i, 1);
+    } else if (part === "..") {
+      up++;
+    } else if (up &gt; 0) {
+      if (part === "") {
+        
+        
+        
+        parts.splice(i + 1, up);
+        up = 0;
+      } else {
+        parts.splice(i, 2);
+        up--;
+      }
+    }
+  }
+  path = parts.join("/");
+
+  if (path === "") {
+    path = isAbsolute ? "/" : ".";
+  }
+
+  if (url) {
+    url.path = path;
+    return urlGenerate(url);
+  }
+  return path;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  const source = String(value);
+
+  function cleanPath(path) {
+    const absolute = path.startsWith("/");
+    const parts = path.split("/");
+    const kept = [];
+
+    for (const part of parts) {
+      if (part === "" || part === ".") {
+        continue;
+      }
+      if (part === "..") {
+        if (kept.length &amp;&amp; kept[kept.length - 1] !== "..") {
+          kept.pop();
+        } else if (!absolute) {
+          kept.push("..");
+        }
+      } else {
+        kept.push(part);
+      }
+    }
+
+    if (absolute) {
+      return kept.length ? "/" + kept.join("/") : "/";
+    }
+    return kept.length ? kept.join("/") : ".";
+  }
+
+  const urlMatch = source.match(/^([A-Za-z][A-Za-z0-9+.-]*:)(\/\/[^/?#]*)?([^?#]*)(\?[^#]*)?(#.*)?$/);
+
+  if (urlMatch &amp;&amp; (urlMatch[2] || source.indexOf(":") !== -1)) {
+    const scheme = urlMatch[1];
+    const authority = urlMatch[2] || "";
+    const path = urlMatch[3] || "";
+    const query = urlMatch[4] || "";
+    const fragment = urlMatch[5] || "";
+
+    if (path === "") {
+      return source;
+    }
+
+    return scheme + authority + cleanPath(path) + query + fragment;
+  }
+
+  return cleanPath(source);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0048</h2>
+        <p>Combines a base location and a target location into a normalized path or URL while preserving complete URL and data URL inputs.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L197-L237">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aRoot, aPath) {
+  if (aRoot === "") {
+    aRoot = ".";
+  }
+  if (aPath === "") {
+    aPath = ".";
+  }
+  const aPathUrl = urlParse(aPath);
+  const aRootUrl = urlParse(aRoot);
+  if (aRootUrl) {
+    aRoot = aRootUrl.path || "/";
+  }
+
+  
+  if (aPathUrl &amp;&amp; !aPathUrl.scheme) {
+    if (aRootUrl) {
+      aPathUrl.scheme = aRootUrl.scheme;
+    }
+    return urlGenerate(aPathUrl);
+  }
+
+  if (aPathUrl || aPath.match(dataUrlRegexp)) {
+    return aPath;
+  }
+
+  
+  if (aRootUrl &amp;&amp; !aRootUrl.host &amp;&amp; !aRootUrl.path) {
+    aRootUrl.host = aPath;
+    return urlGenerate(aRootUrl);
+  }
+
+  const joined = aPath.charAt(0) === "/"
+    ? aPath
+    : normalize(aRoot.replace(/\/+$/, "") + "/" + aPath);
+
+  if (aRootUrl) {
+    aRootUrl.path = joined;
+    return urlGenerate(aRootUrl);
+  }
+  return joined;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(first, second) {
+  first = first || ".";
+  second = second || ".";
+
+  if (/^(?:data:|[A-Za-z][A-Za-z0-9+.-]*:)/.test(second)) {
+    return second;
+  }
+
+  function parseLocation(value) {
+    var match = /^([A-Za-z][A-Za-z0-9+.-]*:)?(?:\/\/([^/?#]*))?([^?#]*)(\?[^#]*)?(#.*)?$/.exec(value);
+    return {
+      scheme: match &amp;&amp; match[1] ? match[1] : "",
+      host: match &amp;&amp; match[2] != null ? match[2] : null,
+      path: match &amp;&amp; match[3] ? match[3] : "",
+      query: match &amp;&amp; match[4] ? match[4] : "",
+      hash: match &amp;&amp; match[5] ? match[5] : ""
+    };
+  }
+
+  function normalize(path) {
+    var absolute = path.charAt(0) === "/";
+    var trailing = path.length &gt; 1 &amp;&amp; path.charAt(path.length - 1) === "/";
+    var parts = path.split("/");
+    var out = [];
+
+    for (var i = 0; i &lt; parts.length; i++) {
+      var part = parts[i];
+      if (!part || part === ".") continue;
+      if (part === "..") {
+        if (out.length &amp;&amp; out[out.length - 1] !== "..") {
+          out.pop();
+        } else if (!absolute) {
+          out.push("..");
+        }
+      } else {
+        out.push(part);
+      }
+    }
+
+    var result = (absolute ? "/" : "") + out.join("/");
+    if (!result) result = absolute ? "/" : ".";
+    if (trailing &amp;&amp; result !== "/") result += "/";
+    return result;
+  }
+
+  function directoryOf(path) {
+    if (!path) return "/";
+    if (path.charAt(path.length - 1) === "/") return path;
+    var index = path.lastIndexOf("/");
+    return index &lt; 0 ? "" : path.slice(0, index + 1);
+  }
+
+  var base = parseLocation(first);
+
+  if (second.slice(0, 2) === "//") {
+    return (base.scheme || "") + second;
+  }
+
+  var nextPath;
+  if (second.charAt(0) === "/") {
+    nextPath = normalize(second);
+  } else if (base.scheme &amp;&amp; base.host === "" &amp;&amp; !base.path &amp;&amp; second.indexOf("/") &lt; 0 &amp;&amp; second.charAt(0) !== ".") {
+    base.host = second;
+    nextPath = "/";
+  } else {
+    nextPath = normalize(directoryOf(base.path || (base.scheme ? "/" : ".")) + second);
+  }
+
+  if (base.scheme || base.host !== null) {
+    return base.scheme + (base.host !== null ? "//" + base.host : "") + nextPath + base.query + base.hash;
+  }
+
+  return nextPath;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0049</h2>
+        <p>Produces a relative path from a directory-like starting point to a contained target, or returns the target unchanged when no suitable relationship can be established.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L250-L281">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aRoot, aPath) {
+  if (aRoot === "") {
+    aRoot = ".";
+  }
+
+  aRoot = aRoot.replace(/\/$/, "");
+
+  
+  
+  
+  
+  let level = 0;
+  while (aPath.indexOf(aRoot + "/") !== 0) {
+    const index = aRoot.lastIndexOf("/");
+    if (index &lt; 0) {
+      return aPath;
+    }
+
+    
+    
+    
+    aRoot = aRoot.slice(0, index);
+    if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
+      return aPath;
+    }
+
+    ++level;
+  }
+
+  
+  return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(start, target) {
+  let base = start === "" ? "." : start;
+
+  if (base.length &gt; 0 &amp;&amp; base.endsWith("/")) {
+    base = base.slice(0, -1);
+  }
+
+  let prefix = "";
+
+  while (true) {
+    if (target === base) {
+      return prefix || ".";
+    }
+
+    if (target.startsWith(base + "/")) {
+      return prefix + target.slice(base.length + 1);
+    }
+
+    const slash = base.lastIndexOf("/");
+
+    if (slash &lt;= 0 || base.slice(0, slash).endsWith(":/")) {
+      return target;
+    }
+
+    base = base.slice(0, slash);
+    prefix += "../";
+  }
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0050</h2>
+        <p>Returns whether a provided value is a string-like marker made of zero or more dollar signs followed by the exact suffix `__proto__`.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L320-L352">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(s) {
+  if (!s) {
+    return false;
+  }
+
+  const length = s.length;
+
+  if (length &lt; 9 ) {
+    return false;
+  }
+
+  
+  if (s.charCodeAt(length - 1) !== 95   ||
+      s.charCodeAt(length - 2) !== 95   ||
+      s.charCodeAt(length - 3) !== 111  ||
+      s.charCodeAt(length - 4) !== 116  ||
+      s.charCodeAt(length - 5) !== 111  ||
+      s.charCodeAt(length - 6) !== 114  ||
+      s.charCodeAt(length - 7) !== 112  ||
+      s.charCodeAt(length - 8) !== 95   ||
+      s.charCodeAt(length - 9) !== 95  ) {
+    return false;
+  }
+  
+
+  for (let i = length - 10; i &gt;= 0; i--) {
+    if (s.charCodeAt(i) !== 36 ) {
+      return false;
+    }
+  }
+
+  return true;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(value) {
+  if (!value) return false;
+
+  const marker = "__proto__";
+  const count = value.length;
+
+  if (count &lt; marker.length) return false;
+
+  const start = count - marker.length;
+
+  for (let index = 0; index &lt; start; index++) {
+    if (value[index] !== "$") return false;
+  }
+
+  for (let index = 0; index &lt; marker.length; index++) {
+    if (value[start + index] !== marker[index]) return false;
+  }
+
+  return true;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0051</h2>
+        <p>Compares two mapping records to produce a deterministic sort order based on original position first and generated position/name only when requested.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L362-L389">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(mappingA, mappingB, onlyCompareOriginal) {
+  let cmp = strcmp(mappingA.source, mappingB.source);
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0 || onlyCompareOriginal) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return strcmp(mappingA.name, mappingB.name);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(left, right, originalOnly) {
+  const textOrder = (a, b) =&gt; {
+    if (a === b) return 0;
+    return a &gt; b ? 1 : -1;
+  };
+
+  let result = textOrder(left.source, right.source);
+  if (result !== 0) return result;
+
+  result = left.originalLine - right.originalLine;
+  if (result !== 0) return result;
+
+  result = left.originalColumn - right.originalColumn;
+  if (result !== 0 || originalOnly) return result;
+
+  result = left.generatedColumn - right.generatedColumn;
+  if (result !== 0) return result;
+
+  result = left.generatedLine - right.generatedLine;
+  if (result !== 0) return result;
+
+  return textOrder(left.name, right.name);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0052</h2>
+        <p>Compares two mapping-like records to produce a deterministic sort order, optionally considering only generated output position.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L401-L428">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(mappingA, mappingB, onlyCompareGenerated) {
+  let cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0 || onlyCompareGenerated) {
+    return cmp;
+  }
+
+  cmp = strcmp(mappingA.source, mappingB.source);
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return strcmp(mappingA.name, mappingB.name);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(left, right, generatedOnly) {
+  const generatedLineOrder = left.generatedLine - right.generatedLine;
+  if (generatedLineOrder !== 0) return generatedLineOrder;
+
+  const generatedColumnOrder = left.generatedColumn - right.generatedColumn;
+  if (generatedColumnOrder !== 0 || generatedOnly) return generatedColumnOrder;
+
+  const textOrder = (first, second) =&gt; {
+    if (first === second) return 0;
+    if (first == null) return 1;
+    if (second == null) return -1;
+    return first &gt; second ? 1 : -1;
+  };
+
+  const sourceOrder = textOrder(left.source, right.source);
+  if (sourceOrder !== 0) return sourceOrder;
+
+  const originalLineOrder = left.originalLine - right.originalLine;
+  if (originalLineOrder !== 0) return originalLineOrder;
+
+  const originalColumnOrder = left.originalColumn - right.originalColumn;
+  if (originalColumnOrder !== 0) return originalColumnOrder;
+
+  return textOrder(left.name, right.name);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0053</h2>
+        <p>Compares two string-like inputs with nulls ordered after non-null values and returns a numeric ordering result.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L431-L449">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(aStr1, aStr2) {
+  if (aStr1 === aStr2) {
+    return 0;
+  }
+
+  if (aStr1 === null) {
+    return 1; 
+  }
+
+  if (aStr2 === null) {
+    return -1; 
+  }
+
+  if (aStr1 &gt; aStr2) {
+    return 1;
+  }
+
+  return -1;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(a, b) {
+  if (a === b) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return a &gt; b ? 1 : -1;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0054</h2>
+        <p>Compares two mapping records to produce a deterministic ascending sort order by generated position, source identity, original position, and symbol identity.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L455-L482">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(mappingA, mappingB) {
+  let cmp = mappingA.generatedLine - mappingB.generatedLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = strcmp(mappingA.source, mappingB.source);
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalLine - mappingB.originalLine;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  cmp = mappingA.originalColumn - mappingB.originalColumn;
+  if (cmp !== 0) {
+    return cmp;
+  }
+
+  return strcmp(mappingA.name, mappingB.name);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(left, right) {
+  const numericKeys = ["generatedLine", "generatedColumn", "originalLine", "originalColumn"];
+  const textOrder = (a, b) =&gt; {
+    if (a === b) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    return String(a) &lt; String(b) ? -1 : 1;
+  };
+
+  let difference = left[numericKeys[0]] - right[numericKeys[0]];
+  if (difference) return difference;
+
+  difference = left[numericKeys[1]] - right[numericKeys[1]];
+  if (difference) return difference;
+
+  difference = textOrder(left.source, right.source);
+  if (difference) return difference;
+
+  difference = left[numericKeys[2]] - right[numericKeys[2]];
+  if (difference) return difference;
+
+  difference = left[numericKeys[3]] - right[numericKeys[3]];
+  if (difference) return difference;
+
+  return textOrder(left.name, right.name);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0055</h2>
+        <p>Combines optional base information with a resource reference, resolves it relative to an optional map location, and returns a normalized URL or path.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/util.js#L499-L545">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate(sourceRoot, sourceURL, sourceMapURL) {
+  sourceURL = sourceURL || "";
+
+  if (sourceRoot) {
+    
+    if (sourceRoot[sourceRoot.length - 1] !== "/" &amp;&amp; sourceURL[0] !== "/") {
+      sourceRoot += "/";
+    }
+    
+    
+    
+    
+    
+    sourceURL = sourceRoot + sourceURL;
+  }
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  if (sourceMapURL) {
+    const parsed = urlParse(sourceMapURL);
+    if (!parsed) {
+      throw new Error("sourceMapURL could not be parsed");
+    }
+    if (parsed.path) {
+      
+      const index = parsed.path.lastIndexOf("/");
+      if (index &gt;= 0) {
+        parsed.path = parsed.path.substring(0, index + 1);
+      }
+    }
+    sourceURL = join(urlGenerate(parsed), sourceURL);
+  }
+
+  return normalize(sourceURL);
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate(rootPrefix, resourceReference, mapLocation) {
+  const reference = resourceReference == null ? "" : String(resourceReference);
+  let combined;
+
+  if (rootPrefix == null || rootPrefix === "") {
+    combined = reference;
+  } else {
+    const prefix = String(rootPrefix);
+    combined = prefix + (prefix.endsWith("/") || reference.startsWith("/") || reference === "" ? "" : "/") + reference;
+  }
+
+  const normalizePath = (input) =&gt; {
+    const absolute = input.startsWith("/");
+    const trailing = input.length &gt; 1 &amp;&amp; input.endsWith("/");
+    const out = [];
+    for (const part of input.split("/")) {
+      if (part === "" || part === ".") continue;
+      if (part === "..") {
+        if (out.length &amp;&amp; out[out.length - 1] !== "..") out.pop();
+        else if (!absolute) out.push(part);
+      } else {
+        out.push(part);
+      }
+    }
+    let result = (absolute ? "/" : "") + out.join("/");
+    if (result === "" &amp;&amp; absolute) result = "/";
+    if (trailing &amp;&amp; result !== "/") result += "/";
+    return result;
+  };
+
+  const isUrlLike = (value) =&gt; /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value) || value.startsWith("//");
+
+  if (mapLocation != null &amp;&amp; mapLocation !== "") {
+    const map = String(mapLocation);
+    if (isUrlLike(map)) {
+      let base;
+      try {
+        const parsed = map.startsWith("//") ? new URL("http:" + map) : new URL(map);
+        parsed.hash = "";
+        parsed.search = "";
+        parsed.pathname = parsed.pathname.replace(/[^/]*$/, "");
+        base = parsed;
+      } catch (error) {
+        throw new Error("Invalid map location");
+      }
+      try {
+        const resolved = new URL(combined, base);
+        return (map.startsWith("//") &amp;&amp; resolved.protocol === "http:" ? "" : resolved.protocol) + "//" + resolved.host + normalizePath(resolved.pathname) + resolved.search + resolved.hash;
+      } catch (error) {
+        throw new Error("Invalid resolved reference");
+      }
+    }
+
+    const directory = map.replace(/[^/]*$/, "");
+    combined = combined.startsWith("/") || isUrlLike(combined) ? combined : directory + combined;
+  }
+
+  if (isUrlLike(combined)) {
+    try {
+      const parsed = combined.startsWith("//") ? new URL("http:" + combined) : new URL(combined);
+      const prefix = combined.startsWith("//") &amp;&amp; parsed.protocol === "http:" ? "" : parsed.protocol;
+      return prefix + "//" + parsed.host + normalizePath(parsed.pathname) + parsed.search + parsed.hash;
+    } catch (error) {
+      throw new Error("Invalid reference");
+    }
+  }
+
+  return normalizePath(combined);
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0056</h2>
+        <p>Creates a new mutable record with default positions and unresolved optional metadata.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/wasm.js#L6-L14">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate() {
+  this.generatedLine = 0;
+  this.generatedColumn = 0;
+  this.lastGeneratedColumn = null;
+  this.source = null;
+  this.originalLine = null;
+  this.originalColumn = null;
+  this.name = null;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>function candidate() {
+  this.generatedLine = 1;
+  this.generatedColumn = 0;
+  this.lastGeneratedColumn = null;
+  this.source = null;
+  this.originalLine = null;
+  this.originalColumn = null;
+  this.name = null;
+}</code></pre>
+      </article>
+<article>
+        <h2>js_0057</h2>
+        <p>Initializes a WebAssembly-backed helper once and returns a shared promise for the resulting interface.</p>
+        <p><a href="https://github.com/mozilla/source-map/blob/b2171d58e90e64472b0e858013c0cc5f6772a83d/lib/wasm.js#L18-L107">Human source</a> · BSD-3-Clause</p>
+        <h3>Human</h3>
+        <pre><code>function candidate() {
+  if (cachedWasm) {
+    return cachedWasm;
+  }
+
+  const callbackStack = [];
+
+  cachedWasm = readWasm().then(buffer =&gt; {
+      return WebAssembly.instantiate(buffer, {
+        env: {
+          mapping_callback(
+            generatedLine,
+            generatedColumn,
+
+            hasLastGeneratedColumn,
+            lastGeneratedColumn,
+
+            hasOriginal,
+            source,
+            originalLine,
+            originalColumn,
+
+            hasName,
+            name
+          ) {
+            const mapping = new Mapping();
+            
+            mapping.generatedLine = generatedLine + 1;
+            mapping.generatedColumn = generatedColumn;
+
+            if (hasLastGeneratedColumn) {
+              
+              mapping.lastGeneratedColumn = lastGeneratedColumn - 1;
+            }
+
+            if (hasOriginal) {
+              mapping.source = source;
+              
+              mapping.originalLine = originalLine + 1;
+              mapping.originalColumn = originalColumn;
+
+              if (hasName) {
+                mapping.name = name;
+              }
+            }
+
+            callbackStack[callbackStack.length - 1](mapping);
+          },
+
+          start_all_generated_locations_for() { console.time("all_generated_locations_for"); },
+          end_all_generated_locations_for() { console.timeEnd("all_generated_locations_for"); },
+
+          start_compute_column_spans() { console.time("compute_column_spans"); },
+          end_compute_column_spans() { console.timeEnd("compute_column_spans"); },
+
+          start_generated_location_for() { console.time("generated_location_for"); },
+          end_generated_location_for() { console.timeEnd("generated_location_for"); },
+
+          start_original_location_for() { console.time("original_location_for"); },
+          end_original_location_for() { console.timeEnd("original_location_for"); },
+
+          start_parse_mappings() { console.time("parse_mappings"); },
+          end_parse_mappings() { console.timeEnd("parse_mappings"); },
+
+          start_sort_by_generated_location() { console.time("sort_by_generated_location"); },
+          end_sort_by_generated_location() { console.timeEnd("sort_by_generated_location"); },
+
+          start_sort_by_original_location() { console.time("sort_by_original_location"); },
+          end_sort_by_original_location() { console.timeEnd("sort_by_original_location"); },
+        }
+      });
+  }).then(Wasm =&gt; {
+    return {
+      exports: Wasm.instance.exports,
+      withMappingCallback: (mappingCallback, f) =&gt; {
+        callbackStack.push(mappingCallback);
+        try {
+          f();
+        } finally {
+          callbackStack.pop();
+        }
+      }
+    };
+  }).then(null, e =&gt; {
+    cachedWasm = null;
+    throw e;
+  });
+
+  return cachedWasm;
+}</code></pre>
+        <h3>AI</h3>
+        <pre><code>let candidate = (() =&gt; {
+  let pending;
+  let instance;
+  let callbackStack = [];
+
+  function buildMapping(raw) {
+    let mapping = {
+      generated: {
+        line: raw.generatedLine + 1,
+        column: raw.generatedColumn
+      }
+    };
+
+    if (raw.generatedEndLine !== undefined || raw.generatedEndColumn !== undefined) {
+      mapping.generated.end = {
+        line: raw.generatedEndLine === undefined ? raw.generatedLine + 1 : raw.generatedEndLine + 1,
+        column: (raw.generatedEndColumn === undefined ? raw.generatedColumn : raw.generatedEndColumn) - 1
+      };
+    }
+
+    if (raw.hasOriginal || raw.source !== undefined || raw.originalLine !== undefined || raw.originalColumn !== undefined) {
+      mapping.source = raw.source;
+      mapping.original = {
+        line: raw.originalLine + 1,
+        column: raw.originalColumn
+      };
+    }
+
+    if (raw.hasName || raw.name !== undefined) {
+      mapping.name = raw.name;
+    }
+
+    return mapping;
+  }
+
+  function normalizeMapping(args) {
+    if (args.length === 1 &amp;&amp; args[0] &amp;&amp; typeof args[0] === "object") {
+      return buildMapping(args[0]);
+    }
+
+    let [generatedLine, generatedColumn, generatedEndLine, generatedEndColumn, source, originalLine, originalColumn, name, hasOriginal, hasName] = args;
+    return buildMapping({
+      generatedLine,
+      generatedColumn,
+      generatedEndLine,
+      generatedEndColumn,
+      source,
+      originalLine,
+      originalColumn,
+      name,
+      hasOriginal,
+      hasName
+    });
+  }
+
+  function dispatchMapping(...args) {
+    let active = callbackStack[callbackStack.length - 1];
+    if (active) {
+      active(normalizeMapping(args));
+    }
+  }
+
+  async function readBinary() {
+    if (typeof candidate.loadBinary === "function") {
+      return await candidate.loadBinary();
+    }
+
+    if (candidate.binary) {
+      return candidate.binary;
+    }
+
+    if (typeof WebAssembly.compileStreaming === "function" &amp;&amp; candidate.url) {
+      return fetch(candidate.url);
+    }
+
+    if (candidate.url) {
+      return await (await fetch(candidate.url)).arrayBuffer();
+    }
+
+    throw new Error("No WebAssembly binary source configured");
+  }
+
+  function timed(exports) {
+    return new Proxy(exports, {
+      get(target, property, receiver) {
+        let value = Reflect.get(target, property, receiver);
+        if (typeof value !== "function") {
+          return value;
+        }
+        return (...args) =&gt; {
+          let label = `wasm:${String(property)}`;
+          console.time(label);
+          try {
+            return value.apply(target, args);
+          } finally {
+            console.timeEnd(label);
+          }
+        };
+      }
+    });
+  }
+
+  return async function candidate() {
+    if (pending) {
+      return pending;
+    }
+
+    pending = (async () =&gt; {
+      let imports = {
+        env: {
+          mapping_callback: dispatchMapping,
+          mappingCallback: dispatchMapping
+        }
+      };
+
+      let binary = await readBinary();
+      let result;
+      if (binary instanceof Response &amp;&amp; typeof WebAssembly.instantiateStreaming === "function") {
+        result = await WebAssembly.instantiateStreaming(binary, imports);
+      } else if (binary instanceof WebAssembly.Module) {
+        result = await WebAssembly.instantiate(binary, imports);
+      } else {
+        result = await WebAssembly.instantiate(binary, imports);
+      }
+
+      instance = result.instance || result;
+      let capabilities = timed(instance.exports);
+
+      return {
+        instance,
+        exports: capabilities,
+        capabilities,
+        withMappingCallback(callback, operation) {
+          callbackStack.push(callback);
+          try {
+            return operation(capabilities);
+          } finally {
+            callbackStack.pop();
+          }
+        }
+      };
+    })();
+
+    try {
+      return await pending;
+    } catch (error) {
+      pending = undefined;
+      instance = undefined;
+      throw error;
+    }
+  };
+})();</code></pre>
+      </article>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"display_code":"function candidate() {\n  this.generatedLine = 1;\n  this.generatedColumn = 0;\n  this.lastGeneratedColumn = null;\n  this.source = null;\n  this.originalLine = null;\n  this.originalColumn = null;\n  this.name = null;\n}"}

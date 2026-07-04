@@ -1,0 +1,1 @@
+{"display_code":"function candidate(separator, parts) {\n  const folderText = parts.dir || parts.root;\n  const fileText = parts.base || `${parts.name || \"\"}${parts.ext || \"\"}`;\n\n  if (!folderText) {\n    return fileText;\n  }\n\n  return folderText === parts.root\n    ? folderText + fileText\n    : folderText + separator + fileText;\n}"}
