@@ -34,6 +34,7 @@ pnpm build            # Production build
 pnpm typecheck        # Nuxt/Vue TypeScript check
 pnpm convex:dev       # Local Convex backend
 pnpm convex:codegen   # Regenerate Convex client files
+pnpm dataset:format   # Format display snippets in dataset JSONL files
 ```
 
 ## Environment
@@ -41,12 +42,29 @@ pnpm convex:codegen   # Regenerate Convex client files
 See `.env.example` for the full list.
 
 - `NUXT_PUBLIC_CONVEX_URL`: required by the Nuxt client to call Convex
-- `ENABLED_LANGUAGES`: comma-separated language ids, defaults to `js`
-- `ENABLE_PUBLIC_AGGREGATES`: show crowd stats on result pages
-- `ENABLE_PAIR_REPORTING`: show per-case issue reporting links
-- `ENABLE_SHARE_CARD`: show the X share action on result pages
-- `ENABLE_DEMOGRAPHIC_PROMPTS`: optionally ask pre-round profile questions
-- `ENABLE_PERCENTILES`: reserved feature flag
+- `CONFIG_ADMIN_SECRET`: optional; required only when calling the protected
+  `config:updateAppConfig` Convex mutation
+
+Feature flags and runtime game settings live in the Convex `appConfig` table.
+If no row exists, the backend falls back to these defaults:
+
+- enabled languages: `js`
+- dataset version: `v1`
+- total questions: `10`
+- resume window: `5 minutes`
+- public aggregates and share cards: enabled
+- demographic prompts, pair reporting, and percentiles: disabled
+
+To update the config from the CLI, set `CONFIG_ADMIN_SECRET` in the Convex
+deployment first, then run:
+
+```sh
+pnpm convex run config:updateAppConfig '{
+  "adminSecret": "your-secret",
+  "enabledLanguages": ["js"],
+  "enablePairReporting": true
+}'
+```
 
 ## App Map
 
@@ -78,12 +96,16 @@ The three main screens are:
 ```text
 convex/
   schema.ts       Tables, validators, and indexes
+  config.ts       Runtime config defaults, reader, and protected updater
   quiz.ts         Public game queries and mutations
 ```
 
 Important Convex functions:
 
 - `getEnabledLanguages`: returns language options and feature flags
+- `config:getAppConfig`: returns the active runtime config
+- `config:updateAppConfig`: updates runtime config when `CONFIG_ADMIN_SECRET`
+  matches
 - `startSession`: creates a session and stores selected session questions
 - `submitAnswer`: locks one answer, scores it server-side, updates aggregates
 - `completeSession`: closes a fully answered session and records the score
@@ -116,6 +138,7 @@ dataset/
 scripts/dataset/
   collect.ts          Collect candidate snippets
   filter.ts           Filter candidates
+  format.ts           Format display snippets with Prettier
   normalize.ts        Normalize display code
   spec.ts             Generate behavioral specs
   generate.ts         Generate AI snippets
@@ -127,6 +150,14 @@ scripts/dataset/
 
 The Codex-based variants (`spec-codex.ts`, `generate-codex.ts`) are alternate
 pipeline steps for spec/code generation.
+
+To clean published JavaScript snippets and refresh import rows:
+
+```sh
+pnpm dataset:format dataset/v1/js.jsonl
+pnpm dataset:validate dataset/v1/js.jsonl dataset/v1/schema.json
+pnpm dataset:convex-table dataset/v1/js.jsonl dataset/work/convex/pairs.jsonl
+```
 
 ## UI Notes
 

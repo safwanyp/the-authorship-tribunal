@@ -5,6 +5,20 @@ const language = v.union(v.literal('js'), v.literal('ts'), v.literal('python'), 
 const label = v.union(v.literal('human'), v.literal('ai'))
 
 export default defineSchema({
+  appConfig: defineTable({
+    key: v.string(),
+    enabledLanguages: v.array(language),
+    datasetVersion: v.string(),
+    totalQuestions: v.number(),
+    resumeMs: v.number(),
+    enableDemographicPrompts: v.boolean(),
+    enablePairReporting: v.boolean(),
+    enablePublicAggregates: v.boolean(),
+    enablePercentiles: v.boolean(),
+    enableShareCard: v.boolean(),
+    updatedAt: v.number()
+  }).index('by_key', ['key']),
+
   pairs: defineTable({
     pairId: v.string(),
     datasetVersion: v.string(),

@@ -1,10 +1,8 @@
 import { mutation, query } from './_generated/server'
 import type { MutationCtx } from './_generated/server'
 import { v } from 'convex/values'
+import { readAppConfig, type AppConfig } from './config'
 
-const totalQuestions = 10
-const resumeMs = 5 * 60 * 1000
-const datasetVersion = process.env.DATASET_VERSION || 'v1'
 const languages = ['js', 'ts', 'python', 'rust', 'cpp'] as const
 const languageNames: Record<(typeof languages)[number], string> = {
   js: 'JavaScript',
@@ -20,25 +18,26 @@ const label = v.union(v.literal('human'), v.literal('ai'))
 export const getEnabledLanguages = query({
   args: {},
   handler: async (ctx) => {
-    const enabledLanguages = new Set((process.env.ENABLED_LANGUAGES || 'js').split(',').map((item) => item.trim()))
+    const config = await readAppConfig(ctx)
+    const enabledLanguages = new Set(config.enabledLanguages)
     const options = []
 
     for (const id of languages) {
       const approved = await ctx.db
         .query('pairs')
         .withIndex('by_language_status_dataset', (q) =>
-          q.eq('language', id).eq('status', 'approved').eq('datasetVersion', datasetVersion)
+          q.eq('language', id).eq('status', 'approved').eq('datasetVersion', config.datasetVersion)
         )
         .collect()
       options.push({
         id,
         name: languageNames[id],
         approvedPairCount: approved.length,
-        enabled: enabledLanguages.has(id) && approved.length >= totalQuestions
+        enabled: enabledLanguages.has(id) && approved.length >= config.totalQuestions
       })
     }
 
-    return { languages: options, featureFlags: featureFlags() }
+    return { languages: options, featureFlags: featureFlags(config) }
   }
 })
 
@@ -50,36 +49,41 @@ export const startSession = mutation({
     recentPairIds: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
+    const config = await readAppConfig(ctx)
+    if (!config.enabledLanguages.includes(args.language)) {
+      throw new Error('Language is not enabled.')
+    }
+
     const enabled = await ctx.db
       .query('pairs')
       .withIndex('by_language_status_dataset', (q) =>
-        q.eq('language', args.language).eq('status', 'approved').eq('datasetVersion', datasetVersion)
+        q.eq('language', args.language).eq('status', 'approved').eq('datasetVersion', config.datasetVersion)
       )
       .collect()
 
-    if (enabled.length < totalQuestions) {
+    if (enabled.length < config.totalQuestions) {
       throw new Error('Language is not enabled.')
     }
 
     const recent = new Set(args.recentPairIds || [])
     const fresh = enabled.filter((pair) => !recent.has(pair.pairId))
-    const pool = fresh.length >= totalQuestions ? fresh : enabled
-    const selected = shuffle(pool).slice(0, totalQuestions)
-    const labels = balancedLabels()
+    const pool = fresh.length >= config.totalQuestions ? fresh : enabled
+    const selected = shuffle(pool).slice(0, config.totalQuestions)
+    const labels = balancedLabels(config.totalQuestions)
     const now = Date.now()
     const resultSlug = makeSlug()
 
     const sessionId = await ctx.db.insert('sessions', {
       resultSlug,
       language: args.language,
-      datasetVersion,
+      datasetVersion: config.datasetVersion,
       status: 'in_progress',
       profileCodingExperience: args.profileCodingExperience,
       profileAiToolUsage: args.profileAiToolUsage,
-      total: totalQuestions,
+      total: config.totalQuestions,
       startedAt: now,
       lastActiveAt: now,
-      resumeExpiresAt: now + resumeMs
+      resumeExpiresAt: now + config.resumeMs
     })
 
     const questions = []
@@ -111,8 +115,8 @@ export const startSession = mutation({
       resultSlug,
       language: args.language,
       questions,
-      featureFlags: featureFlags(),
-      resumeExpiresAt: now + resumeMs
+      featureFlags: featureFlags(config),
+      resumeExpiresAt: now + config.resumeMs
     }
   }
 })
@@ -182,11 +186,11 @@ export const completeSession = mutation({
       .query('answers')
       .withIndex('by_session', (q) => q.eq('sessionId', args.sessionId))
       .collect()
-    if (answers.length !== totalQuestions) throw new Error('All questions must be answered first.')
+    if (answers.length !== session.total) throw new Error('All questions must be answered first.')
 
     const score = answers.filter((answer) => answer.isCorrect).length
     await ctx.db.patch(args.sessionId, { status: 'completed', score, completedAt: Date.now() })
-    await incrementLanguageAggregate(ctx, session.language, score)
+    await incrementLanguageAggregate(ctx, session.language, score, session.total)
 
     return { resultSlug: session.resultSlug, seenPairIds: questions.map((question) => question.pairId) }
   }
@@ -195,12 +199,14 @@ export const completeSession = mutation({
 export const getResultBySlug = query({
   args: { resultSlug: v.string() },
   handler: async (ctx, args) => {
+    const config = await readAppConfig(ctx)
+    const flags = featureFlags(config)
     const session = await ctx.db
       .query('sessions')
       .withIndex('by_result_slug', (q) => q.eq('resultSlug', args.resultSlug))
       .unique()
-    if (!session) return { status: 'missing' as const, featureFlags: featureFlags() }
-    if (session.status !== 'completed') return { status: session.status, featureFlags: featureFlags() }
+    if (!session) return { status: 'missing' as const, featureFlags: flags }
+    if (session.status !== 'completed') return { status: session.status, featureFlags: flags }
 
     const questions = await ctx.db
       .query('sessionQuestions')
@@ -232,7 +238,7 @@ export const getResultBySlug = query({
         correctLabel: question.shownLabel,
         isCorrect: answer.isCorrect,
         crowd:
-          featureFlags().enablePublicAggregates && aggregate && shownCount > 0
+          flags.enablePublicAggregates && aggregate && shownCount > 0
             ? {
                 shownCount,
                 guessedHumanPercent: Math.round((aggregate.humanGuesses / shownCount) * 100),
@@ -259,7 +265,7 @@ export const getResultBySlug = query({
       total: session.total,
       language: session.language,
       completedAt: session.completedAt || session.lastActiveAt,
-      featureFlags: featureFlags(),
+      featureFlags: flags,
       aggregateSummary: languageAggregate
         ? {
             completedSessions: languageAggregate.completedSessions,
@@ -312,7 +318,8 @@ async function incrementPairAggregate(
 async function incrementLanguageAggregate(
   ctx: MutationCtx,
   language: 'js' | 'ts' | 'python' | 'rust' | 'cpp',
-  score: number
+  score: number,
+  total: number
 ) {
   const existing = await ctx.db
     .query('languageAggregates')
@@ -321,7 +328,7 @@ async function incrementLanguageAggregate(
   const now = Date.now()
 
   if (!existing) {
-    const scoreHistogram = Array.from({ length: totalQuestions + 1 }, () => 0)
+    const scoreHistogram = Array.from({ length: total + 1 }, () => 0)
     scoreHistogram[score] = 1
     await ctx.db.insert('languageAggregates', {
       language,
@@ -334,6 +341,7 @@ async function incrementLanguageAggregate(
   }
 
   const scoreHistogram = [...existing.scoreHistogram]
+  while (scoreHistogram.length <= score) scoreHistogram.push(0)
   scoreHistogram[score] = (scoreHistogram[score] || 0) + 1
   await ctx.db.patch(existing._id, {
     completedSessions: existing.completedSessions + 1,
@@ -343,18 +351,19 @@ async function incrementLanguageAggregate(
   })
 }
 
-function featureFlags() {
+function featureFlags(config: AppConfig) {
   return {
-    enableDemographicPrompts: process.env.ENABLE_DEMOGRAPHIC_PROMPTS === 'true',
-    enablePairReporting: process.env.ENABLE_PAIR_REPORTING === 'true',
-    enablePublicAggregates: process.env.ENABLE_PUBLIC_AGGREGATES !== 'false',
-    enablePercentiles: process.env.ENABLE_PERCENTILES === 'true',
-    enableShareCard: process.env.ENABLE_SHARE_CARD !== 'false'
+    enableDemographicPrompts: config.enableDemographicPrompts,
+    enablePairReporting: config.enablePairReporting,
+    enablePublicAggregates: config.enablePublicAggregates,
+    enablePercentiles: config.enablePercentiles,
+    enableShareCard: config.enableShareCard
   }
 }
 
-function balancedLabels() {
-  const humanCount = 4 + Math.floor(Math.random() * 3)
+function balancedLabels(totalQuestions: number) {
+  const midpoint = Math.round(totalQuestions / 2)
+  const humanCount = Math.min(totalQuestions - 1, Math.max(1, midpoint - 1 + Math.floor(Math.random() * 3)))
   return shuffle([
     ...Array.from({ length: humanCount }, () => 'human' as const),
     ...Array.from({ length: totalQuestions - humanCount }, () => 'ai' as const)

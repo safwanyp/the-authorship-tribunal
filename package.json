@@ -13,6 +13,7 @@
     "dataset:convex-table": "node --experimental-strip-types scripts/dataset/convex-table.ts",
     "dataset:collect": "node --experimental-strip-types scripts/dataset/collect.ts",
     "dataset:filter": "node --experimental-strip-types scripts/dataset/filter.ts",
+    "dataset:format": "node --experimental-strip-types scripts/dataset/format.ts",
     "dataset:spec": "node --experimental-strip-types scripts/dataset/spec.ts",
     "dataset:spec:codex": "node --experimental-strip-types scripts/dataset/spec-codex.ts",
     "dataset:generate": "node --experimental-strip-types scripts/dataset/generate.ts",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@nuxt/typescript-build": "latest",
     "@types/node": "^26.1.0",
+    "prettier": "^3.9.4",
     "tsx": "latest",
     "typescript": "latest",
     "vue-tsc": "latest"

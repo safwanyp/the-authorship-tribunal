@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as config from "../config.js";
 import type * as quiz from "../quiz.js";
 
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  config: typeof config;
   quiz: typeof quiz;
 }>;
 
