@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Authorship Tribunal — Court Record</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --ink: #0e0d0b;
+    --ink-2: #16140f;
+    --ink-3: #1d1a14;
+    --parchment: #ede4d0;
+    --parchment-dim: #a89c85;
+    --gold: #c9a45c;
+    --oxblood: #a03030;
+    --red: #e05545;
+    --steel: #6e8aa3;
+    --rule: rgba(237, 228, 208, 0.14);
+    --serif: "Playfair Display", Georgia, serif;
+    --mono: "IBM Plex Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: var(--serif);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    background-image: radial-gradient(
+      ellipse at 50% -20%,
+      rgba(201, 164, 92, 0.06),
+      transparent 60%
+    );
+  }
+
+  .court { width: min(820px, 92vw); padding: 40px 0 80px; }
+
+  /* ---------- letterhead ---------- */
+  header { text-align: center; margin-bottom: 30px; }
+  .crest { font-family: var(--mono); font-size: 22px; color: var(--gold); letter-spacing: 4px; }
+  h1 { font-size: 20px; font-weight: 700; letter-spacing: 6px; text-transform: uppercase; margin-top: 10px; }
+  .motto { font-style: italic; color: var(--parchment-dim); font-size: 13px; margin-top: 4px; }
+  .double-rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    height: 4px;
+    margin: 18px auto 0;
+  }
+
+  /* ---------- seal / reveal ---------- */
+  .seal-gate {
+    text-align: center;
+    padding: 60px 0 70px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .wax {
+    width: 110px; height: 110px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #b8433a, #7c1f1c 70%);
+    box-shadow: 0 8px 30px rgba(160, 48, 48, 0.4), inset 0 -4px 12px rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    color: rgba(237, 228, 208, 0.85);
+    font-size: 20px;
+    letter-spacing: 2px;
+    transition: transform 0.2s;
+  }
+  .seal-gate:hover .wax { transform: scale(1.05) rotate(-3deg); }
+  .seal-gate p {
+    margin-top: 22px;
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 15px;
+  }
+  .seal-gate.broken { animation: fadeout 0.5s forwards; }
+  @keyframes fadeout { to { opacity: 0; transform: scale(1.1); } }
+
+  .record { display: none; }
+  .record.open { display: block; animation: unseal 0.7s ease-out; }
+  @keyframes unseal {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ---------- judgment panel ---------- */
+  .judgment {
+    position: relative;
+    text-align: center;
+    background: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 44px 30px 40px;
+    overflow: hidden;
+  }
+  .judgment .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .score {
+    font-size: 84px;
+    font-weight: 900;
+    line-height: 1.05;
+    margin-top: 10px;
+  }
+  .score small { font-size: 30px; font-weight: 500; color: var(--parchment-dim); }
+  .judgment .sub {
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .rank-stamp {
+    position: absolute;
+    top: 26px; right: 26px;
+    padding: 10px 18px;
+    border: 3px solid var(--red);
+    border-radius: 5px;
+    color: var(--red);
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    transform: rotate(7deg);
+    mix-blend-mode: screen;
+    text-shadow: 0 0 10px currentColor;
+    opacity: 0;
+  }
+  .rank-stamp.slam { animation: slam 0.45s cubic-bezier(0.2,1.4,0.4,1) 0.6s forwards; }
+  @keyframes slam {
+    0% { opacity: 0; transform: rotate(7deg) scale(2.2); }
+    55% { opacity: 1; transform: rotate(7deg) scale(0.94); }
+    100% { opacity: 0.95; transform: rotate(7deg) scale(1); }
+  }
+
+  /* ---------- precedent line ---------- */
+  .precedent {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 18px 0 34px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+  }
+  .precedent b { color: var(--parchment); font-weight: 600; }
+
+  /* ---------- docket rows ---------- */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 8px 0 12px;
+    text-align: center;
+  }
+
+  .case-row {
+    background: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-left: 4px solid;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .case-row.upheld { border-left-color: var(--gold); }
+  .case-row.overturned { border-left-color: var(--oxblood); }
+
+  .row-main {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    gap: 18px;
+    align-items: center;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .row-main:hover { background: var(--ink-3); }
+
+  .case-no {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--parchment-dim);
+  }
+
+  .ruling-line { font-size: 15px; }
+  .ruling-line .vs { color: var(--parchment-dim); font-style: italic; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .tag.human { color: var(--gold); }
+  .tag.machine { color: var(--steel); }
+
+  .outcome {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .outcome.upheld { color: var(--gold); }
+  .outcome.overturned { color: var(--red); }
+
+  .row-detail {
+    display: none;
+    padding: 4px 18px 18px 102px;
+    border-top: 1px dashed var(--rule);
+  }
+  .case-row.expanded .row-detail { display: block; }
+
+  .detail-desc {
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 12px 0;
+  }
+
+  .crowd-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .crowd-bar {
+    flex: 1;
+    max-width: 260px;
+    height: 6px;
+    background: rgba(110, 138, 163, 0.25);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .crowd-bar i {
+    display: block;
+    height: 100%;
+    background: var(--steel);
+  }
+
+  .origin {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--parchment-dim);
+  }
+  .origin a { color: var(--parchment); }
+
+  /* ---------- footer actions ---------- */
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 36px;
+  }
+  .btn {
+    font-family: var(--serif);
+    font-size: 16px;
+    padding: 14px 30px;
+    background: var(--ink-2);
+    color: var(--parchment);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn:hover { border-color: var(--gold); background: rgba(201,164,92,.07); }
+  .btn.primary { border-color: var(--gold); color: var(--gold); }
+
+  .closing {
+    text-align: center;
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 13px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+  <div class="court">
+    <header>
+      <div class="crest">❦ { } ❦</div>
+      <h1>The Authorship Tribunal</h1>
+      <div class="motto">manu aut machina — by hand, or by machine</div>
+      <hr class="double-rule" />
+    </header>
+
+    <!-- seal gate -->
+    <div class="seal-gate" id="sealGate">
+      <div class="wax">{ }</div>
+      <p>All ten cases have been heard.<br />Break the seal to unseal the record.</p>
+    </div>
+
+    <!-- record -->
+    <div class="record" id="record">
+      <div class="judgment">
+        <div class="rank-stamp" id="rankStamp">Under Review</div>
+        <div class="label">Judgment of the Council · Session VII · JavaScript</div>
+        <div class="score">5 <small>of 10</small></div>
+        <div class="sub">verdicts upheld · sealed Jul 4, 2026, 6:10 PM</div>
+      </div>
+
+      <div class="precedent" style="margin-top:18px">
+        <span>Precedent: <b>4.9 of 10</b> across 8 councils</span>
+        <span>Misses logged: <b>5</b></span>
+      </div>
+
+      <div class="section-label">— The Docket —</div>
+      <div id="docket"></div>
+
+      <div class="actions">
+        <button class="btn primary">Publish the record</button>
+        <button class="btn">Convene a new council</button>
+      </div>
+
+      <div class="closing">Court procedure available upon request. Exhibits remain sealed on published records.</div>
+    </div>
+  </div>
+
+<script>
+  const cases = [
+    { no: 1, you: "MACHINE", truth: "MACHINE", crowdAI: 100,
+      desc: "Determines whether a supplied value names a known content type and returns its primary associated file extension.",
+      origin: "jshttp/mime-types", lic: "MIT" },
+    { no: 2, you: "HUMAN", truth: "HUMAN", crowdAI: 0,
+      desc: "Parses a delimited assignment string into an object of decoded key-value entries.",
+      origin: "jshttp/cookie", lic: "MIT" },
+    { no: 3, you: "MACHINE", truth: "MACHINE", crowdAI: 100,
+      desc: "Searches a sorted range and returns the index of an exact match or the nearest valid fallback.",
+      origin: "mozilla/source-map", lic: "BSD-3-Clause" },
+    { no: 4, you: "HUMAN", truth: "MACHINE", crowdAI: 0,
+      desc: "Parses an extended field value string and returns the decoded text when the declared encoding is supported.",
+      origin: "jshttp/content-disposition", lic: "MIT" },
+    { no: 5, you: "MACHINE", truth: "HUMAN", crowdAI: 100,
+      desc: "Returns whether a provided value is a string-like marker of dollar signs followed by `__proto__`.",
+      origin: "mozilla/source-map", lic: "BSD-3-Clause" },
+    { no: 6, you: "MACHINE", truth: "MACHINE", crowdAI: 100,
+      desc: "Mutates selected object properties, replacing array values with copies that omit undefined entries.",
+      origin: "ljharb/qs", lic: "BSD-3-Clause" },
+    { no: 7, you: "HUMAN", truth: "MACHINE", crowdAI: 38,
+      desc: "Normalizes header casing across a set of request options before dispatch.",
+      origin: "jshttp/fresh", lic: "MIT" },
+    { no: 8, you: "MACHINE", truth: "HUMAN", crowdAI: 62,
+      desc: "Escapes a string for safe embedding within a regular expression pattern.",
+      origin: "sindresorhus/escape-string-regexp", lic: "MIT" },
+    { no: 9, you: "HUMAN", truth: "HUMAN", crowdAI: 12,
+      desc: "Resolves a relative module identifier against a base path with extension fallbacks.",
+      origin: "browserify/resolve", lic: "MIT" },
+    { no: 10, you: "MACHINE", truth: "HUMAN", crowdAI: 88,
+      desc: "Computes a stable hash for arbitrary JSON-serializable input.",
+      origin: "substack/json-stable-stringify", lic: "MIT" },
+  ];
+
+  function rankFor(score) {
+    if (score >= 9) return ["Honored Adjudicator", "var(--gold)"];
+    if (score >= 7) return ["Sound Judgment", "var(--gold)"];
+    if (score >= 5) return ["Under Review", "var(--red)"];
+    return ["Recused", "var(--red)"];
+  }
+
+  const docket = document.getElementById("docket");
+  cases.forEach((c) => {
+    const ok = c.you === c.truth;
+    const row = document.createElement("div");
+    row.className = "case-row " + (ok ? "upheld" : "overturned");
+    row.innerHTML = `
+      <div class="row-main">
+        <span class="case-no">CASE ${String(c.no).padStart(2, "0")}</span>
+        <span class="ruling-line">
+          You ruled <span class="tag ${c.you.toLowerCase()}">${c.you}</span>
+          <span class="vs"> · truth </span>
+          <span class="tag ${c.truth.toLowerCase()}">${c.truth}</span>
+        </span>
+        <span class="outcome ${ok ? "upheld" : "overturned"}">
+          ${ok ? "✓ Upheld" : "✗ Overturned"}
+        </span>
+      </div>
+      <div class="row-detail">
+        <p class="detail-desc">${c.desc}</p>
+        <div class="crowd-bar-wrap">
+          <span>Past councils ruled machine:</span>
+          <div class="crowd-bar"><i style="width:${c.crowdAI}%"></i></div>
+          <span>${c.crowdAI}%</span>
+        </div>
+        <div class="origin">
+          Origin disclosed: <a href="#">${c.origin}</a> · ${c.lic} · AI counsel: codex
+        </div>
+      </div>`;
+    row.querySelector(".row-main").addEventListener("click", () =>
+      row.classList.toggle("expanded")
+    );
+    docket.appendChild(row);
+  });
+
+  // seal-break reveal
+  const gate = document.getElementById("sealGate");
+  gate.addEventListener("click", () => {
+    gate.classList.add("broken");
+    setTimeout(() => {
+      gate.style.display = "none";
+      document.getElementById("record").classList.add("open");
+      const score = cases.filter((c) => c.you === c.truth).length;
+      const [rank, color] = rankFor(score);
+      const stamp = document.getElementById("rankStamp");
+      stamp.textContent = rank;
+      stamp.style.borderColor = stamp.style.color = color;
+      stamp.classList.add("slam");
+    }, 450);
+  });
+</script>
+</body>
+</html>

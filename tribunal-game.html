@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Authorship Tribunal</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --ink: #0e0d0b;
+    --ink-2: #16140f;
+    --ink-3: #1d1a14;
+    --parchment: #ede4d0;
+    --parchment-dim: #a89c85;
+    --gold: #c9a45c;
+    --oxblood: #a03030;
+    --steel: #6e8aa3;
+    --rule: rgba(237, 228, 208, 0.14);
+    --serif: "Playfair Display", Georgia, serif;
+    --mono: "IBM Plex Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: var(--serif);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    background-image: radial-gradient(
+      ellipse at 50% -20%,
+      rgba(201, 164, 92, 0.06),
+      transparent 60%
+    );
+  }
+
+  .court { width: min(880px, 92vw); padding: 40px 0 64px; }
+
+  /* ---------- letterhead ---------- */
+  header { text-align: center; margin-bottom: 28px; }
+
+  .crest {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 4px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  .motto {
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .double-rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    height: 4px;
+    margin: 18px auto 0;
+  }
+
+  /* ---------- docket ---------- */
+  .docket {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--parchment-dim);
+    margin: 20px 0 14px;
+  }
+
+  .docket-track { display: flex; gap: 7px; }
+
+  .seal-dot {
+    width: 11px; height: 11px;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    transition: all 0.25s;
+  }
+  .seal-dot.current { border-color: var(--gold); box-shadow: 0 0 6px rgba(201,164,92,.5); }
+  .seal-dot.upheld { background: var(--gold); border-color: var(--gold); }
+  .seal-dot.overturned { background: var(--oxblood); border-color: var(--oxblood); }
+
+  /* ---------- case title ---------- */
+  .case-title { text-align: center; margin: 26px 0 22px; }
+  .case-title .no {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .case-title h2 { font-size: 34px; font-weight: 900; margin-top: 6px; }
+  .case-title .sub {
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  /* ---------- exhibit ---------- */
+  .exhibit {
+    position: relative;
+    background: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  }
+
+  .exhibit-tag {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--ink-3);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--parchment-dim);
+  }
+  .exhibit-tag .label { color: var(--gold); }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.75;
+    padding: 26px 30px;
+    overflow-x: auto;
+    color: #d8cfba;
+    counter-reset: line;
+  }
+  pre .ln { counter-increment: line; display: block; }
+  pre .ln::before {
+    content: counter(line);
+    display: inline-block;
+    width: 2.2em;
+    margin-right: 1.4em;
+    text-align: right;
+    color: rgba(237, 228, 208, 0.25);
+    user-select: none;
+  }
+  .kw { color: #c98a6a; }
+  .fn { color: #c9a45c; }
+  .str { color: #9fae8a; }
+  .num { color: #b58ec9; }
+
+  /* ---------- stamps ---------- */
+  .stamp {
+    position: absolute;
+    top: 50%; left: 50%;
+    padding: 14px 30px;
+    border: 4px solid;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 30px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    text-shadow: 0 0 12px currentColor;
+  }
+  .stamp.ruling { color: #d8cfba; border-color: #d8cfba; }
+  .stamp.upheld { color: var(--gold); border-color: var(--gold); }
+  .stamp.overturned { color: #e05545; border-color: #e05545; }
+
+  .stamp.slam { animation: slam 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) forwards; }
+  @keyframes slam {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--rot)) scale(2.4); }
+    55% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--rot)) scale(0.94); }
+    100% { opacity: 0.95; transform: translate(-50%, -50%) rotate(var(--rot)) scale(1); }
+  }
+
+  .shake { animation: shake 0.3s; }
+  @keyframes shake {
+    20% { transform: translate(2px, -1px); }
+    40% { transform: translate(-2px, 2px); }
+    60% { transform: translate(1px, 1px); }
+    80% { transform: translate(-1px, -1px); }
+  }
+
+  /* ---------- verdict buttons ---------- */
+  .bench {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 22px;
+  }
+
+  .verdict {
+    background: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--parchment);
+    font-family: var(--serif);
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  }
+  .verdict:active { transform: scale(0.98); }
+  .verdict .big { font-size: 30px; font-weight: 700; display: block; }
+  .verdict .desc {
+    font-style: italic;
+    font-size: 13px;
+    color: var(--parchment-dim);
+    display: block;
+    margin-top: 4px;
+  }
+  .verdict .key {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--parchment-dim);
+    display: block;
+    margin-top: 14px;
+    text-transform: uppercase;
+  }
+  .verdict.human:hover {
+    border-color: var(--gold);
+    background: rgba(201, 164, 92, 0.07);
+  }
+  .verdict.ai:hover {
+    border-color: var(--steel);
+    background: rgba(110, 138, 163, 0.08);
+  }
+  .verdict:disabled { opacity: 0.45; cursor: default; }
+
+  .ticker {
+    text-align: center;
+    font-style: italic;
+    color: var(--parchment-dim);
+    font-size: 14px;
+    margin-top: 26px;
+    min-height: 20px;
+    transition: opacity 0.4s;
+  }
+</style>
+</head>
+<body>
+  <div class="court">
+    <header>
+      <div class="crest">❦ { } ❦</div>
+      <h1>The Authorship Tribunal</h1>
+      <div class="motto">manu aut machina — by hand, or by machine</div>
+      <hr class="double-rule" />
+    </header>
+
+    <div class="docket">
+      <span>Docket · Session VII</span>
+      <div class="docket-track" id="track"></div>
+      <span id="caseCount">Case 01 of 10</span>
+    </div>
+
+    <div class="case-title">
+      <div class="no" id="caseNo">Case No. 01</div>
+      <h2 id="caseName">In re: Snippet 8F2A</h2>
+      <div class="sub">The council will now examine the evidence.</div>
+    </div>
+
+    <div class="exhibit" id="exhibit">
+      <div class="exhibit-tag">
+        <span class="label">Exhibit A</span>
+        <span id="exhibitMeta">JavaScript · 23 lines</span>
+      </div>
+      <pre id="code"></pre>
+      <div class="stamp ruling" id="stampRuling" style="--rot:-7deg"></div>
+      <div class="stamp" id="stampTruth" style="--rot:5deg"></div>
+    </div>
+
+    <div class="bench">
+      <button class="verdict human" id="btnHuman">
+        <span class="big">Human</span>
+        <span class="desc">written by hand</span>
+        <span class="key">Press H</span>
+      </button>
+      <button class="verdict ai" id="btnAI">
+        <span class="big">Machine</span>
+        <span class="desc">generated by AI</span>
+        <span class="key">Press A</span>
+      </button>
+    </div>
+
+    <div class="ticker" id="ticker">Rule on the exhibit before you.</div>
+  </div>
+
+<script>
+  // --- demo data (truth is random per case for the mockup) ---
+  const TOTAL = 10;
+  const snippet = [
+    '<span class="kw">function</span> <span class="fn">candidate</span>(value) {',
+    '  <span class="kw">var</span> queue = [{ obj: { o: value }, prop: <span class="str">\'o\'</span> }];',
+    '  <span class="kw">var</span> refs = [];',
+    '',
+    '  <span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i &lt; queue.length; ++i) {',
+    '    <span class="kw">var</span> item = queue[i];',
+    '    <span class="kw">var</span> obj = item.obj[item.prop];',
+    '',
+    '    <span class="kw">var</span> keys = Object.<span class="fn">keys</span>(obj);',
+    '    <span class="kw">for</span> (<span class="kw">var</span> j = <span class="num">0</span>; j &lt; keys.length; ++j) {',
+    '      <span class="kw">var</span> key = keys[j];',
+    '      <span class="kw">var</span> val = obj[key];',
+    '      <span class="kw">if</span> (<span class="kw">typeof</span> val === <span class="str">\'object\'</span> &amp;&amp; val !== <span class="kw">null</span>) {',
+    '        queue.<span class="fn">push</span>({ obj: obj, prop: key });',
+    '        refs.<span class="fn">push</span>(val);',
+    '      }',
+    '    }',
+    '  }',
+    '',
+    '  <span class="fn">compactQueue</span>(queue);',
+    '  <span class="kw">return</span> value;',
+    '}',
+  ];
+
+  const codeEl = document.getElementById("code");
+  codeEl.innerHTML = snippet
+    .map((l) => `<span class="ln">${l || " "}</span>`)
+    .join("");
+
+  // docket seals
+  const track = document.getElementById("track");
+  for (let i = 0; i < TOTAL; i++) {
+    const d = document.createElement("div");
+    d.className = "seal-dot" + (i === 0 ? " current" : "");
+    track.appendChild(d);
+  }
+
+  let current = 0;
+  let locked = false;
+
+  const btnHuman = document.getElementById("btnHuman");
+  const btnAI = document.getElementById("btnAI");
+  const stampRuling = document.getElementById("stampRuling");
+  const stampTruth = document.getElementById("stampTruth");
+  const exhibit = document.getElementById("exhibit");
+  const ticker = document.getElementById("ticker");
+
+  function slam(el, text, cls) {
+    el.textContent = text;
+    el.className = "stamp " + cls;
+    void el.offsetWidth; // restart animation
+    el.classList.add("slam");
+    exhibit.classList.remove("shake");
+    void exhibit.offsetWidth;
+    exhibit.classList.add("shake");
+  }
+
+  function rule(guess) {
+    if (locked || current >= TOTAL) return;
+    locked = true;
+    btnHuman.disabled = btnAI.disabled = true;
+
+    const truth = Math.random() < 0.5 ? "HUMAN" : "MACHINE"; // demo only
+    const correct = guess === truth;
+
+    slam(stampRuling, "RULED: " + guess, "ruling");
+
+    setTimeout(() => {
+      slam(
+        stampTruth,
+        correct ? "VERDICT UPHELD" : "OVERTURNED",
+        correct ? "upheld" : "overturned"
+      );
+      const dots = track.children;
+      dots[current].className =
+        "seal-dot " + (correct ? "upheld" : "overturned");
+      ticker.textContent = correct
+        ? "The council murmurs approvingly."
+        : "The record shows the council erred. Truth: " + truth + ".";
+    }, 700);
+
+    setTimeout(() => nextCase(), 2300);
+  }
+
+  function nextCase() {
+    current++;
+    if (current >= TOTAL) {
+      ticker.textContent = "All cases heard. The record will now be unsealed.";
+      return;
+    }
+    stampRuling.className = "stamp ruling";
+    stampTruth.className = "stamp";
+    track.children[current].classList.add("current");
+
+    const hex = Math.floor(Math.random() * 0xffff)
+      .toString(16).toUpperCase().padStart(4, "0");
+    document.getElementById("caseNo").textContent =
+      "Case No. " + String(current + 1).padStart(2, "0");
+    document.getElementById("caseName").textContent = "In re: Snippet " + hex;
+    document.getElementById("caseCount").textContent =
+      "Case " + String(current + 1).padStart(2, "0") + " of 10";
+
+    ticker.textContent = "The council calls the next case.";
+    btnHuman.disabled = btnAI.disabled = false;
+    locked = false;
+  }
+
+  btnHuman.addEventListener("click", () => rule("HUMAN"));
+  btnAI.addEventListener("click", () => rule("MACHINE"));
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "h") rule("HUMAN");
+    if (e.key.toLowerCase() === "a") rule("MACHINE");
+  });
+</script>
+</body>
+</html>
