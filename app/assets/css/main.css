@@ -22,8 +22,11 @@
 
 html {
     min-width: 320px;
+    overflow-x: hidden;
     background: var(--ink);
     scroll-behavior: smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -134,7 +137,7 @@ code {
     width: min(880px, 92vw);
     min-height: 100dvh;
     margin: 0 auto;
-    padding: 40px 0 64px;
+    padding: 40px 0 calc(64px + env(safe-area-inset-bottom, 0px));
 }
 
 .results-court {
@@ -343,6 +346,8 @@ code {
 
 .exhibit {
     position: relative;
+    width: 100%;
+    min-width: 0;
     overflow: hidden;
     background: var(--ink-2);
     border: 1px solid var(--rule);
@@ -369,15 +374,25 @@ code {
 }
 
 .code-panel {
+    width: 100%;
+    max-width: 100%;
     max-height: min(42vh, 760px);
     margin: 0;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 26px 30px;
     color: #d8cfba;
     counter-reset: line;
     font-family: var(--mono);
     font-size: 13.5px;
     line-height: 1.75;
+}
+
+.code-panel code {
+    display: block;
+    width: max-content;
+    min-width: 100%;
 }
 
 .mini-code {
@@ -397,7 +412,6 @@ code {
 
 .code-panel .ln {
     display: block;
-    min-width: max-content;
     white-space: pre;
     counter-increment: line;
 }
@@ -576,6 +590,7 @@ code {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-top: 22px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .verdict {
@@ -1087,7 +1102,21 @@ code {
 @media (max-width: 480px) {
     .court {
         width: min(100vw - 22px, 880px);
-        padding-top: 24px;
+        padding-top: max(24px, env(safe-area-inset-top, 0px));
+    }
+
+    .quiz-court {
+        width: 100%;
+        padding-right: max(11px, env(safe-area-inset-right, 0px));
+        padding-left: max(11px, env(safe-area-inset-left, 0px));
+        padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .quiz-shell,
+    .case-title,
+    .bench {
+        min-width: 0;
+        max-width: 100%;
     }
 
     .tribunal-title {
@@ -1113,8 +1142,9 @@ code {
     }
 
     .code-panel {
+        max-height: min(48svh, 520px);
         padding: 20px 16px;
-        font-size: 12.5px;
+        font-size: 12px;
     }
 
     .stamp {
