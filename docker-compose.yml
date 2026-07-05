@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     image: authorship-tribunal:latest
-    container_name: authorship-tribunal
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -15,14 +14,14 @@ services:
       NUXT_ALLOWED_ORIGINS: ${NUXT_ALLOWED_ORIGINS:-}
       CONVEX_SERVER_SECRET: ${CONVEX_SERVER_SECRET:?Set CONVEX_SERVER_SECRET in .env}
     ports:
-      - "3000:3000"
+      - "3000"
     healthcheck:
       test:
         [
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+          "fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 5s
