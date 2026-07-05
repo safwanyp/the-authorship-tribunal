@@ -1,14 +1,28 @@
 <script setup lang="ts">
 import type { CompleteResult, Guess, ResultPayload } from '~/types/game'
 
+const route = useRoute()
+const router = useRouter()
+const config = useRuntimeConfig()
+const resultSlug = computed(() => String(route.params.resultSlug))
+const appBaseUrl = computed(() => String(config.public.appBaseUrl || '').replace(/\/$/, ''))
+const resultUrl = computed(() => absolutePublicUrl(`/results/${resultSlug.value}`))
+const resultOgImage = computed(() => absolutePublicUrl(`/og/results/${resultSlug.value}.png`))
+
 useSeoMeta({
   title: 'Court Record / The Authorship Tribunal',
   description: 'A completed Authorship Tribunal record with score, precedent, and source notes.',
+  ogTitle: 'Court Record / The Authorship Tribunal',
+  ogDescription: 'A completed Authorship Tribunal record with score, rank, precedent, and source notes.',
+  ogUrl: resultUrl,
+  ogImage: resultOgImage,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Court Record / The Authorship Tribunal',
+  twitterDescription: 'A completed Authorship Tribunal record with score and rank.',
+  twitterImage: resultOgImage,
   robots: 'noindex, nofollow'
 })
 
-const route = useRoute()
-const router = useRouter()
 const game = useGameClient()
 const result = ref<ResultPayload | null>(null)
 const loading = ref(true)
@@ -86,6 +100,10 @@ function crowdCorrectPercent(answer: CompleteResult['answers'][number]) {
 
 function crowdWrongPercent(answer: CompleteResult['answers'][number]) {
   return Math.max(0, 100 - crowdCorrectPercent(answer))
+}
+
+function absolutePublicUrl(path: string) {
+  return appBaseUrl.value ? `${appBaseUrl.value}${path}` : path
 }
 </script>
 

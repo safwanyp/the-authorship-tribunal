@@ -25,7 +25,9 @@ ENV PORT=3000
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=3000
 
-RUN addgroup -S nodejs && adduser -S nuxt -G nodejs
+RUN apk add --no-cache fontconfig ttf-dejavu \
+    && addgroup -S nodejs \
+    && adduser -S nuxt -G nodejs
 
 COPY --from=builder --chown=nuxt:nodejs /app/.output ./.output
 

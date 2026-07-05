@@ -3,6 +3,10 @@ import type { LanguageId, LanguageOption } from '~/types/game'
 
 const game = useGameClient()
 const router = useRouter()
+const config = useRuntimeConfig()
+const appBaseUrl = computed(() => String(config.public.appBaseUrl || '').replace(/\/$/, ''))
+const landingUrl = computed(() => absolutePublicUrl('/'))
+const landingOgImage = computed(() => absolutePublicUrl('/og/default.png'))
 
 const languages = ref<LanguageOption[]>([])
 const selectedLanguage = ref<LanguageId>('js')
@@ -19,7 +23,12 @@ useSeoMeta({
   description: 'Inspect ten code exhibits and decide whether each one came from a human or AI.',
   ogTitle: 'The Authorship Tribunal',
   ogDescription: 'A developer-facing code reading game with ten cases, no login, and a sealed court record.',
-  twitterCard: 'summary_large_image'
+  ogUrl: landingUrl,
+  ogImage: landingOgImage,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'The Authorship Tribunal',
+  twitterDescription: 'Inspect ten code exhibits and decide whether each one came from a human or AI.',
+  twitterImage: landingOgImage
 })
 
 onMounted(async () => {
@@ -63,6 +72,10 @@ async function start() {
   } finally {
     starting.value = false
   }
+}
+
+function absolutePublicUrl(path: string) {
+  return appBaseUrl.value ? `${appBaseUrl.value}${path}` : path
 }
 </script>
 
