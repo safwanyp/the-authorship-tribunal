@@ -31,10 +31,13 @@ export function useGameClient() {
 
   const startSession = async (input: StartSessionInput) => {
     const recentPairIds = getRecentPairs(input.language)
-    const payload = (await convex().mutation(api.quiz.startSession, {
-      ...input,
-      recentPairIds
-    })) as QuizPayload
+    const payload = await $fetch<QuizPayload>('/api/game/start-session', {
+      method: 'POST',
+      body: {
+        ...input,
+        recentPairIds
+      }
+    })
     saveRun({
       ...payload,
       currentQuestionIndex: 0,
@@ -46,11 +49,14 @@ export function useGameClient() {
   }
 
   const submitAnswer = async (answer: PendingAnswer) => {
-    await convex().mutation(api.quiz.submitAnswer, {
-      sessionId: answer.sessionId,
-      questionId: answer.questionId,
-      guess: answer.guess,
-      responseMs: answer.responseMs
+    await $fetch('/api/game/submit-answer', {
+      method: 'POST',
+      body: {
+        sessionId: answer.sessionId,
+        questionId: answer.questionId,
+        guess: answer.guess,
+        responseMs: answer.responseMs
+      }
     })
   }
 
@@ -72,9 +78,12 @@ export function useGameClient() {
   }
 
   const completeSession = async (run: StoredQuizRun) => {
-    const response = (await convex().mutation(api.quiz.completeSession, {
-      sessionId: run.sessionId
-    })) as { resultSlug: string; seenPairIds: string[] }
+    const response = await $fetch<{ resultSlug: string; seenPairIds: string[] }>('/api/game/complete-session', {
+      method: 'POST',
+      body: {
+        sessionId: run.sessionId
+      }
+    })
     rememberPairs(run.language, response.seenPairIds)
     clearRun()
     return response

@@ -43,12 +43,14 @@ export const getEnabledLanguages = query({
 
 export const startSession = mutation({
   args: {
+    serverSecret: v.string(),
     language,
     profileCodingExperience: v.optional(v.string()),
     profileAiToolUsage: v.optional(v.string()),
     recentPairIds: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
+    assertServerWrite(args.serverSecret)
     const config = await readAppConfig(ctx)
     if (!config.enabledLanguages.includes(args.language)) {
       throw new Error('Language is not enabled.')
@@ -123,12 +125,14 @@ export const startSession = mutation({
 
 export const submitAnswer = mutation({
   args: {
+    serverSecret: v.string(),
     sessionId: v.id('sessions'),
     questionId: v.string(),
     guess: label,
     responseMs: v.number()
   },
   handler: async (ctx, args) => {
+    assertServerWrite(args.serverSecret)
     const session = await ctx.db.get(args.sessionId)
     if (!session || session.status !== 'in_progress') {
       throw new Error('Session is not active.')
@@ -168,8 +172,12 @@ export const submitAnswer = mutation({
 })
 
 export const completeSession = mutation({
-  args: { sessionId: v.id('sessions') },
+  args: {
+    serverSecret: v.string(),
+    sessionId: v.id('sessions')
+  },
   handler: async (ctx, args) => {
+    assertServerWrite(args.serverSecret)
     const session = await ctx.db.get(args.sessionId)
     if (!session) throw new Error('Session not found.')
 
@@ -358,6 +366,13 @@ function featureFlags(config: AppConfig) {
     enablePublicAggregates: config.enablePublicAggregates,
     enablePercentiles: config.enablePercentiles,
     enableShareCard: config.enableShareCard
+  }
+}
+
+function assertServerWrite(secret: string) {
+  const expected = process.env.CONVEX_SERVER_SECRET
+  if (!expected || secret !== expected) {
+    throw new Error('Not authorized to write game state.')
   }
 }
 

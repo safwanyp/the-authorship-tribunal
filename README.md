@@ -41,7 +41,13 @@ pnpm dataset:format   # Format display snippets in dataset JSONL files
 
 See `.env.example` for the full list.
 
-- `NUXT_PUBLIC_CONVEX_URL`: required by the Nuxt client to call Convex
+- `NUXT_PUBLIC_CONVEX_URL`: required by the Nuxt app and server to call Convex
+- `NUXT_PUBLIC_APP_BASE_URL`: canonical deployed frontend URL used for
+  same-origin write checks
+- `CONVEX_SERVER_SECRET`: shared secret required for write mutations; set the
+  same value in Nuxt hosting and Convex
+- `NUXT_ALLOWED_ORIGINS`: optional comma-separated frontend origins for Nuxt
+  write endpoints
 - `CONFIG_ADMIN_SECRET`: optional; required only when calling the protected
   `config:updateAppConfig` Convex mutation
 
@@ -82,6 +88,10 @@ app/
     results/[resultSlug].vue      Sealed result record and case breakdown
     methodology.vue               Plain-text methodology page
   types/game.ts                   Shared frontend payload types
+
+server/
+  api/game/                       Nuxt write endpoints for game mutations
+  utils/                          Server-side Convex client and request guards
 ```
 
 The three main screens are:
@@ -97,7 +107,7 @@ The three main screens are:
 convex/
   schema.ts       Tables, validators, and indexes
   config.ts       Runtime config defaults, reader, and protected updater
-  quiz.ts         Public game queries and mutations
+  quiz.ts         Game queries and server-gated mutations
 ```
 
 Important Convex functions:
@@ -106,9 +116,12 @@ Important Convex functions:
 - `config:getAppConfig`: returns the active runtime config
 - `config:updateAppConfig`: updates runtime config when `CONFIG_ADMIN_SECRET`
   matches
-- `startSession`: creates a session and stores selected session questions
-- `submitAnswer`: locks one answer, scores it server-side, updates aggregates
-- `completeSession`: closes a fully answered session and records the score
+- `startSession`: creates a session and stores selected session questions;
+  requires `CONVEX_SERVER_SECRET`
+- `submitAnswer`: locks one answer, scores it server-side, updates aggregates;
+  requires `CONVEX_SERVER_SECRET`
+- `completeSession`: closes a fully answered session and records the score;
+  requires `CONVEX_SERVER_SECRET`
 - `getResultBySlug`: builds the public result payload
 
 When editing Convex code, read `convex/_generated/ai/guidelines.md` first.
@@ -119,13 +132,16 @@ habits.
 
 The quiz is deliberately results-only for feedback:
 
-1. `startSession` picks 10 pairs and stores the true shown label in Convex.
-2. The client receives only the display code, language, line count, and
+1. The browser calls Nuxt `/api/game/*` endpoints for game writes.
+2. Nuxt checks origin/rate limits and forwards writes to Convex with
+   `CONVEX_SERVER_SECRET`.
+3. `startSession` picks 10 pairs and stores the true shown label in Convex.
+4. The client receives only the display code, language, line count, and
    question id.
-3. `submitAnswer` scores the guess on the server.
-4. The quiz UI marks cases as filed, not correct or wrong.
-5. `completeSession` finalizes the score after all 10 answers are submitted.
-6. `getResultBySlug` reveals truth, correctness, provenance, and aggregates.
+5. `submitAnswer` scores the guess on the server.
+6. The quiz UI marks cases as filed, not correct or wrong.
+7. `completeSession` finalizes the score after all answers are submitted.
+8. `getResultBySlug` reveals truth, correctness, provenance, and aggregates.
 
 ## Dataset Map
 

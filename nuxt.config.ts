@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
   runtimeConfig: {
+    convexServerSecret: process.env.CONVEX_SERVER_SECRET || "",
+    allowedOrigins: process.env.NUXT_ALLOWED_ORIGINS || "",
     public: {
       convexUrl: process.env.NUXT_PUBLIC_CONVEX_URL || "",
       appBaseUrl:
