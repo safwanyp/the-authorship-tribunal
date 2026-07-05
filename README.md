@@ -51,6 +51,33 @@ See `.env.example` for the full list.
 - `CONFIG_ADMIN_SECRET`: optional; required only when calling the protected
   `config:updateAppConfig` Convex mutation
 
+## Docker Deployment
+
+The Nuxt app can run as a Node/Nitro server through Docker Compose:
+
+```sh
+cp .env.example .env
+```
+
+Set these production values in `.env`:
+
+```env
+NUXT_PUBLIC_CONVEX_URL=https://your-production-deployment.convex.cloud
+NUXT_PUBLIC_APP_BASE_URL=https://your-frontend-domain.example
+CONVEX_SERVER_SECRET=the-same-secret-set-in-convex-prod
+NUXT_ALLOWED_ORIGINS=
+```
+
+Then build and run:
+
+```sh
+docker compose build
+docker compose up -d
+```
+
+The container listens on port `3000`. Put your reverse proxy in front of that
+port and make sure `NUXT_PUBLIC_APP_BASE_URL` matches the public HTTPS origin.
+
 Feature flags and runtime game settings live in the Convex `appConfig` table.
 If no row exists, the backend falls back to these defaults:
 
