@@ -14,7 +14,6 @@ const result = ref<ResultPayload | null>(null)
 const loading = ref(true)
 const error = ref('')
 const unsealed = ref(false)
-const gateBroken = ref(false)
 const expandedCases = ref<Set<string>>(new Set())
 
 const complete = computed(() => (result.value?.status === 'completed' ? (result.value as CompleteResult) : null))
@@ -60,13 +59,6 @@ onMounted(async () => {
   }
 })
 
-function breakSeal() {
-  gateBroken.value = true
-  window.setTimeout(() => {
-    unsealed.value = true
-  }, 450)
-}
-
 function toggleCase(pairId: string) {
   const next = new Set(expandedCases.value)
   if (next.has(pairId)) next.delete(pairId)
@@ -85,6 +77,15 @@ function verdictLabel(label: Guess) {
 
 function verdictClass(label: Guess) {
   return label === 'human' ? 'human' : 'machine'
+}
+
+function crowdCorrectPercent(answer: CompleteResult['answers'][number]) {
+  if (!answer.crowd) return 0
+  return answer.correctLabel === 'human' ? answer.crowd.guessedHumanPercent : answer.crowd.guessedAiPercent
+}
+
+function crowdWrongPercent(answer: CompleteResult['answers'][number]) {
+  return Math.max(0, 100 - crowdCorrectPercent(answer))
 }
 </script>
 
@@ -110,16 +111,13 @@ function verdictClass(label: Guess) {
     </section>
 
     <template v-else-if="complete">
-      <button
+      <WaxSeal
         v-if="!unsealed"
-        class="seal-gate"
-        :class="{ broken: gateBroken }"
-        type="button"
-        @click="breakSeal"
+        label="All ten cases have been heard. Break the seal to unseal the record."
+        @unsealed="unsealed = true"
       >
-        <span class="wax">{ }</span>
         <span>All ten cases have been heard.<br />Break the seal to unseal the record.</span>
-      </button>
+      </WaxSeal>
 
       <div v-if="unsealed" class="record open">
         <section class="judgment">
@@ -164,14 +162,17 @@ function verdictClass(label: Guess) {
             <div class="row-detail">
               <p class="detail-desc">{{ answer.provenance.specSummary }}</p>
               <div v-if="answer.crowd" class="crowd-bar-wrap">
-                <span>Past councils ruled machine:</span>
+                <span>Past councils chose truth:</span>
                 <div class="crowd-bar" aria-hidden="true">
-                  <i :style="{ width: `${answer.crowd.guessedAiPercent}%` }" />
+                  <i :style="{ width: `${crowdCorrectPercent(answer)}%` }" />
                 </div>
-                <span>{{ answer.crowd.guessedAiPercent }}%</span>
+                <span class="crowd-split">
+                  {{ crowdCorrectPercent(answer) }}% correct
+                  <span class="crowd-wrong">· {{ crowdWrongPercent(answer) }}% wrong</span>
+                </span>
               </div>
               <div v-else class="crowd-bar-wrap">
-                <span>Past councils ruled machine:</span>
+                <span>Past councils chose truth:</span>
                 <div class="crowd-bar" aria-hidden="true"><i class="crowd-bar-empty" /></div>
                 <span>sealed</span>
               </div>
