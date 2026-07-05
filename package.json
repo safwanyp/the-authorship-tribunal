@@ -8,6 +8,7 @@
     "typecheck": "nuxt typecheck",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
+    "convex:clear-game-data": "node --experimental-strip-types scripts/convex/clear-game-data.ts",
     "dataset:validate": "node --experimental-strip-types scripts/dataset/validate.ts",
     "dataset:import": "node --experimental-strip-types scripts/dataset/import.ts",
     "dataset:convex-table": "node --experimental-strip-types scripts/dataset/convex-table.ts",

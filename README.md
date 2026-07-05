@@ -99,6 +99,18 @@ pnpm convex run config:updateAppConfig '{
 }'
 ```
 
+Before launch, clear any test sessions and crowd aggregates while keeping the
+published `pairs` dataset and `appConfig` row:
+
+```sh
+pnpm convex:clear-game-data -- --dry-run
+pnpm convex:clear-game-data -- --yes
+```
+
+The script reads `NUXT_PUBLIC_CONVEX_URL` and `CONFIG_ADMIN_SECRET` from your
+environment or `.env`. To target a specific deployment without editing `.env`,
+pass `--url https://your-deployment.convex.cloud`.
+
 ## App Map
 
 ```text
