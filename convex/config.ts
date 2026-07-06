@@ -34,7 +34,7 @@ const defaultAppConfig: AppConfig = {
   enabledLanguages: ['js'],
   datasetVersion: 'v1',
   totalQuestions: 10,
-  resumeMs: 5 * 60 * 1000,
+  resumeMs: 10 * 60 * 1000,
   enableDemographicPrompts: false,
   enablePairReporting: false,
   enablePublicAggregates: true,

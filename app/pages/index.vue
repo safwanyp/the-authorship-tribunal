@@ -1,81 +1,91 @@
 <script setup lang="ts">
-import type { LanguageId, LanguageOption } from '~/types/game'
+import type { LanguageId, LanguageOption } from "~/types/game";
 
-const game = useGameClient()
-const router = useRouter()
-const config = useRuntimeConfig()
-const appBaseUrl = computed(() => String(config.public.appBaseUrl || '').replace(/\/$/, ''))
-const landingUrl = computed(() => absolutePublicUrl('/'))
-const landingOgImage = computed(() => absolutePublicUrl('/og/default.png'))
+const game = useGameClient();
+const router = useRouter();
+const config = useRuntimeConfig();
+const appBaseUrl = computed(() =>
+  String(config.public.appBaseUrl || "").replace(/\/$/, ""),
+);
+const landingUrl = computed(() => absolutePublicUrl("/"));
+const landingOgImage = computed(() => absolutePublicUrl("/og/default.png"));
 
-const languages = ref<LanguageOption[]>([])
-const selectedLanguage = ref<LanguageId>('js')
-const loading = ref(true)
-const starting = ref(false)
-const error = ref('')
-const showProfileStep = ref(false)
-const enableProfileStep = ref(false)
-const profileCodingExperience = ref('')
-const profileAiToolUsage = ref('')
+const languages = ref<LanguageOption[]>([]);
+const selectedLanguage = ref<LanguageId>("js");
+const loading = ref(true);
+const starting = ref(false);
+const error = ref("");
+const showProfileStep = ref(false);
+const enableProfileStep = ref(false);
+const profileCodingExperience = ref("");
+const profileAiToolUsage = ref("");
 
 useSeoMeta({
-  title: 'The Authorship Tribunal',
-  description: 'Inspect ten code exhibits and decide whether each one came from a human or AI.',
-  ogTitle: 'The Authorship Tribunal',
-  ogDescription: 'A developer-facing code reading game with ten cases, no login, and a sealed court record.',
+  title: "The Authorship Tribunal",
+  description:
+    "Inspect ten code exhibits and decide whether each one came from a human or AI.",
+  ogTitle: "The Authorship Tribunal",
+  ogDescription:
+    "A developer-facing code reading game with ten cases, no login, and a sealed court record.",
   ogUrl: landingUrl,
   ogImage: landingOgImage,
-  twitterCard: 'summary_large_image',
-  twitterTitle: 'The Authorship Tribunal',
-  twitterDescription: 'Inspect ten code exhibits and decide whether each one came from a human or AI.',
-  twitterImage: landingOgImage
-})
+  twitterCard: "summary_large_image",
+  twitterTitle: "The Authorship Tribunal",
+  twitterDescription:
+    "Inspect ten code exhibits and decide whether each one came from a human or AI.",
+  twitterImage: landingOgImage,
+});
 
 onMounted(async () => {
-  const stored = game.getStoredRun()
+  const stored = game.getStoredRun();
   if (stored) {
-    await router.replace(`/quiz/${stored.sessionId}`)
-    return
+    await router.replace(`/quiz/${stored.sessionId}`);
+    return;
   }
 
   try {
-    const response = await game.getLanguages()
-    languages.value = response.languages
-    enableProfileStep.value = response.featureFlags.enableDemographicPrompts
-    selectedLanguage.value = response.languages.find((language) => language.enabled)?.id || 'js'
+    const response = await game.getLanguages();
+    languages.value = response.languages;
+    enableProfileStep.value = response.featureFlags.enableDemographicPrompts;
+    selectedLanguage.value =
+      response.languages.find((language) => language.enabled)?.id || "js";
   } catch {
-    error.value = 'Could not load the quiz setup. The console has been informed, probably too dramatically.'
+    error.value =
+      "Could not load the quiz setup. The console has been informed, probably too dramatically.";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
-const enabledLanguages = computed(() => languages.value.filter((language) => language.enabled))
+const enabledLanguages = computed(() =>
+  languages.value.filter((language) => language.enabled),
+);
 
 async function start() {
-  error.value = ''
+  error.value = "";
   if (enableProfileStep.value && !showProfileStep.value) {
-    showProfileStep.value = true
-    return
+    showProfileStep.value = true;
+    return;
   }
 
-  starting.value = true
+  starting.value = true;
   try {
     const session = await game.startSession({
       language: selectedLanguage.value,
       profileCodingExperience: profileCodingExperience.value || undefined,
-      profileAiToolUsage: profileAiToolUsage.value || undefined
-    })
-    await router.push(`/quiz/${session.sessionId}`)
+      profileAiToolUsage: profileAiToolUsage.value || undefined,
+    });
+    await router.push(`/quiz/${session.sessionId}`);
   } catch {
-    error.value = 'Could not start a round. The dataset may not have enough approved pairs yet.'
+    error.value =
+      "Could not start a round. The dataset may not have enough approved pairs yet.";
   } finally {
-    starting.value = false
+    starting.value = false;
   }
 }
 
 function absolutePublicUrl(path: string) {
-  return appBaseUrl.value ? `${appBaseUrl.value}${path}` : path
+  return appBaseUrl.value ? `${appBaseUrl.value}${path}` : path;
 }
 </script>
 
@@ -89,11 +99,13 @@ function absolutePublicUrl(path: string) {
           <p class="kicker">10 cases. No login. No hints.</p>
           <h2>The council awaits your ruling.</h2>
           <p class="lede">
-            Pick one language, examine ten normalized exhibits, and decide whether each
-            record was written by hand or generated by machine.
+            Pick one language, examine ten normalized exhibits, and decide
+            whether each record was written by hand or generated by machine in
+            10 minutes or less.
           </p>
           <div class="briefing-strip" aria-label="Court rules">
             <span>10 mandatory rulings</span>
+            <span>10 minutes to rule</span>
             <span>Results disclosed after</span>
           </div>
         </div>
@@ -103,7 +115,9 @@ function absolutePublicUrl(path: string) {
             <span class="label">Exhibit preview</span>
             <span>Unlabelled · JavaScript</span>
           </div>
-          <pre class="code-panel mini-code"><code><span class="ln"><span class="kw">function</span> <span class="fn">verdict</span>(sample) {</span>
+          <pre
+            class="code-panel mini-code"
+          ><code><span class="ln"><span class="kw">function</span> <span class="fn">verdict</span>(sample) {</span>
 <span class="ln">  <span class="kw">const</span> tells = <span class="fn">read</span>(sample)</span>
 <span class="ln">  <span class="kw">return</span> tells.score &gt; <span class="num">2</span></span>
 <span class="ln">    ? <span class="str">"human"</span></span>
@@ -156,18 +170,30 @@ function absolutePublicUrl(path: string) {
           autocomplete="off"
           :disabled="loading || starting"
         >
-          <option v-for="language in enabledLanguages" :key="language.id" :value="language.id">
+          <option
+            v-for="language in enabledLanguages"
+            :key="language.id"
+            :value="language.id"
+          >
             {{ language.name }}
           </option>
         </select>
-        <button class="btn primary" :disabled="loading || starting || enabledLanguages.length === 0" @click="start">
-          {{ starting ? 'Convening…' : 'Convene the council' }}
+        <button
+          class="btn primary"
+          :disabled="loading || starting || enabledLanguages.length === 0"
+          @click="start"
+        >
+          {{ starting ? "Convening…" : "Convene the council" }}
         </button>
         <button
           v-if="showProfileStep"
           class="btn"
           :disabled="starting"
-          @click="profileCodingExperience = ''; profileAiToolUsage = ''; start()"
+          @click="
+            profileCodingExperience = '';
+            profileAiToolUsage = '';
+            start();
+          "
         >
           Skip
         </button>

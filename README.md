@@ -84,7 +84,7 @@ If no row exists, the backend falls back to these defaults:
 - enabled languages: `js`
 - dataset version: `v1`
 - total questions: `10`
-- resume window: `5 minutes`
+- resume window: `10 minutes`
 - public aggregates and share cards: enabled
 - demographic prompts, pair reporting, and percentiles: disabled
 
@@ -95,6 +95,7 @@ deployment first, then run:
 pnpm convex run config:updateAppConfig '{
   "adminSecret": "your-secret",
   "enabledLanguages": ["js"],
+  "resumeMs": 600000,
   "enablePairReporting": true
 }'
 ```

@@ -13,7 +13,7 @@ import { api } from '~~/convex/_generated/api'
 
 const activeRunKey = 'isitai.activeRun'
 const recentPairsKey = 'isitai.recentPairs'
-const resumeWindowMs = 5 * 60 * 1000
+const resumeWindowMs = 10 * 60 * 1000
 let convexClient: ConvexHttpClient | null = null
 
 interface StartSessionInput {

@@ -137,6 +137,10 @@ export const submitAnswer = mutation({
     if (!session || session.status !== 'in_progress') {
       throw new Error('Session is not active.')
     }
+    if (Date.now() > session.resumeExpiresAt) {
+      await ctx.db.patch(args.sessionId, { status: 'expired', lastActiveAt: Date.now() })
+      throw new Error('Session has expired.')
+    }
 
     const question = await ctx.db
       .query('sessionQuestions')
@@ -194,6 +198,12 @@ export const completeSession = mutation({
       .query('answers')
       .withIndex('by_session', (q) => q.eq('sessionId', args.sessionId))
       .collect()
+
+    if (Date.now() > session.resumeExpiresAt && answers.length !== session.total) {
+      await ctx.db.patch(args.sessionId, { status: 'expired', lastActiveAt: Date.now() })
+      throw new Error('Session has expired.')
+    }
+
     if (answers.length !== session.total) throw new Error('All questions must be answered first.')
 
     const score = answers.filter((answer) => answer.isCorrect).length

@@ -467,6 +467,43 @@ code {
     gap: 7px;
 }
 
+.session-timer {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 10px;
+    margin: 0 auto 18px;
+    padding: 7px 11px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: rgba(22, 20, 15, 0.72);
+    color: var(--parchment-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+}
+
+.session-timer strong {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.session-timer.warning {
+    border-color: rgba(201, 164, 92, 0.48);
+    box-shadow: 0 0 18px rgba(201, 164, 92, 0.08);
+}
+
+.session-timer.expired {
+    border-color: rgba(224, 85, 69, 0.56);
+}
+
+.session-timer.expired strong {
+    color: var(--red);
+}
+
 .seal-dot {
     width: 11px;
     height: 11px;
