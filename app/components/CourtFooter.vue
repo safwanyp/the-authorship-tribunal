@@ -1,6 +1,6 @@
 <template>
   <footer class="court-footer">
     made for fun by
-    <a href="https://x.com/safwanyp_" target="_blank" rel="noreferrer">safwanyp</a>
+    <a href="https://safwanyp.com" target="_blank" rel="noreferrer">safwan</a>
   </footer>
 </template>
