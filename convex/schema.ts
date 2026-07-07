@@ -63,7 +63,8 @@ export default defineSchema({
     resumeExpiresAt: v.number()
   })
     .index('by_result_slug', ['resultSlug'])
-    .index('by_status_language', ['status', 'language']),
+    .index('by_status_language', ['status', 'language'])
+    .index('by_status_and_resume_expires_at', ['status', 'resumeExpiresAt']),
 
   sessionQuestions: defineTable({
     sessionId: v.id('sessions'),

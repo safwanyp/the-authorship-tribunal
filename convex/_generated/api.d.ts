@@ -9,7 +9,9 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as cleanup from "../cleanup.js";
 import type * as config from "../config.js";
+import type * as crons from "../crons.js";
 import type * as quiz from "../quiz.js";
 
 import type {
@@ -20,7 +22,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  cleanup: typeof cleanup;
   config: typeof config;
+  crons: typeof crons;
   quiz: typeof quiz;
 }>;
 
