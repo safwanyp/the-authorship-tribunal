@@ -84,6 +84,11 @@ export interface CompleteResult {
   aggregateSummary?: {
     completedSessions: number
     averageScore: number
+    highScore?: {
+      score: number
+      total: number
+      achievedAt?: number
+    }
   }
   answers: ResultAnswerCard[]
 }

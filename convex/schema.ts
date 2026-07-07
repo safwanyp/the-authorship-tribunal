@@ -103,6 +103,9 @@ export default defineSchema({
     language,
     completedSessions: v.number(),
     totalScore: v.number(),
+    highScore: v.optional(v.number()),
+    highScoreTotal: v.optional(v.number()),
+    highScoreAchievedAt: v.optional(v.number()),
     scoreHistogram: v.array(v.number()),
     updatedAt: v.number()
   }).index('by_language', ['language'])

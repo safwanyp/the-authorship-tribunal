@@ -62,6 +62,11 @@ const precedent = computed(() => {
   const summary = complete.value.aggregateSummary
   return `Precedent: ${summary.averageScore} of ${complete.value.total} across ${summary.completedSessions} ${summary.completedSessions === 1 ? 'council' : 'councils'}`
 })
+const highScoreDisplay = computed(() => {
+  const highScore = complete.value?.aggregateSummary?.highScore
+  if (!highScore) return 'Record high: awaiting first entry'
+  return `Record high: ${highScore.score} of ${highScore.total}`
+})
 
 onMounted(async () => {
   try {
@@ -142,6 +147,7 @@ function absolutePublicUrl(path: string) {
           <div class="rank-stamp slam" :class="rank.tone">{{ rank.label }}</div>
           <div class="label">Judgment of the Council · {{ languageName }}</div>
           <div class="score">{{ complete.score }} <small>of {{ complete.total }}</small></div>
+          <div class="high-score">{{ highScoreDisplay }}</div>
           <div class="sub">verdicts upheld · sealed {{ completedAtDisplay }}</div>
         </section>
 

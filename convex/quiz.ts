@@ -238,6 +238,8 @@ export const getResultBySlug = query({
       .query('languageAggregates')
       .withIndex('by_language', (q) => q.eq('language', session.language))
       .unique()
+    const languageAggregates = await ctx.db.query('languageAggregates').take(languages.length)
+    const highScore = summarizeHighScore(languageAggregates)
 
     const cards = []
     for (const question of questions.sort((a, b) => a.order - b.order)) {
@@ -287,7 +289,8 @@ export const getResultBySlug = query({
       aggregateSummary: languageAggregate
         ? {
             completedSessions: languageAggregate.completedSessions,
-            averageScore: Math.round((languageAggregate.totalScore / languageAggregate.completedSessions) * 10) / 10
+            averageScore: Math.round((languageAggregate.totalScore / languageAggregate.completedSessions) * 10) / 10,
+            highScore
           }
         : undefined,
       answers: cards
@@ -352,6 +355,9 @@ async function incrementLanguageAggregate(
       language,
       completedSessions: 1,
       totalScore: score,
+      highScore: score,
+      highScoreTotal: total,
+      highScoreAchievedAt: now,
       scoreHistogram,
       updatedAt: now
     })
@@ -361,12 +367,51 @@ async function incrementLanguageAggregate(
   const scoreHistogram = [...existing.scoreHistogram]
   while (scoreHistogram.length <= score) scoreHistogram.push(0)
   scoreHistogram[score] = (scoreHistogram[score] || 0) + 1
+  const existingHighScore = existing.highScore ?? highestScoreFromHistogram(existing.scoreHistogram)
+  const isNewHighScore = score >= existingHighScore
   await ctx.db.patch(existing._id, {
     completedSessions: existing.completedSessions + 1,
     totalScore: existing.totalScore + score,
+    highScore: isNewHighScore ? score : existingHighScore,
+    highScoreTotal: isNewHighScore ? total : existing.highScoreTotal ?? existing.scoreHistogram.length - 1,
+    highScoreAchievedAt: isNewHighScore ? now : existing.highScoreAchievedAt,
     scoreHistogram,
     updatedAt: now
   })
+}
+
+function summarizeHighScore(
+  aggregates: Array<{
+    scoreHistogram: number[]
+    highScore?: number
+    highScoreTotal?: number
+    highScoreAchievedAt?: number
+  }>
+) {
+  let record: { score: number; total: number; achievedAt?: number } | undefined
+
+  for (const aggregate of aggregates) {
+    const score = aggregate.highScore ?? highestScoreFromHistogram(aggregate.scoreHistogram)
+    const total = aggregate.highScoreTotal ?? Math.max(0, aggregate.scoreHistogram.length - 1)
+    const ratio = score / Math.max(1, total)
+    const recordRatio = record ? record.score / Math.max(1, record.total) : -1
+    if (!record || ratio > recordRatio || (ratio === recordRatio && score > record.score)) {
+      record = {
+        score,
+        total,
+        achievedAt: aggregate.highScoreAchievedAt
+      }
+    }
+  }
+
+  return record
+}
+
+function highestScoreFromHistogram(scoreHistogram: number[]) {
+  for (let score = scoreHistogram.length - 1; score >= 0; score -= 1) {
+    if ((scoreHistogram[score] || 0) > 0) return score
+  }
+  return 0
 }
 
 function featureFlags(config: AppConfig) {
